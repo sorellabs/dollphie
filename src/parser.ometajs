@@ -1,20 +1,157 @@
-// # module: dollphie/lib/parser
+// # module: Dollphie.parser
 //
 // Provides parsers for the different levels of Dollphie.
 
+// -- Dependencies -----------------------------------------------------
+var AST = require('./ast');
 
-// ## data: reservedSymbols
+var Named = AST.Arg.Named;
+var Pos   = AST.Arg.Pos;
+
+var ArgList   = AST.ArgList;
+var DeclList  = AST.DeclList;
+var ParamList = AST.ParamList;
+var ExprList  = AST.ExprList;
+
+var SimpleBlock = AST.Block.SimpleBlock;
+var RawBlock    = AST.Block.RawBlock;
+var EmptyBlock  = AST.Block.EmptyBlock;
+
+var Str        = AST.Expr.Str;
+var Num        = AST.Expr.Num;
+var Bool       = AST.Expr.Bool;
+var Id         = AST.Expr.Id;
+var Symbol     = AST.Expr.Symbol;
+var Nil        = AST.Expr.Nil;
+var Vector     = AST.Expr.Vector;
+var App        = AST.Expr.App;
+var Define     = AST.Expr.Define;
+var Let        = AST.Expr.Let;
+var IfThenElse = AST.Expr.IfThenElse;
+var Fun        = AST.Expr.Fun;
+var Quote      = AST.Expr.Quote;
+var Document   = AST.Expr.Document;
+
+
+// -- Helpers ----------------------------------------------------------
+
+// ### data: reservedSymbols
 // @private
 // @type{ Array<String> }
 var reservedSymbols = ["define", "let", "if", "fun", "raw"];
 
-// ## function: isReserved
+// ### function: isReserved
 // @private
 // @type{ String → Boolean }
 function isReserved(a) {
   return reservedSymbols.indexOf(a) !== -1
 }
 
+// ### function: toNumber
+// @private
+// @type{ String, String → Number }
+function toNumber(integer, decimal) {
+  return Number(integer + '.' + (decimal || 0))
+}
+
+// ### function: section
+// @private
+// @type{ Number, String → AST.Expr }
+function section(level, title) {
+  return App(
+    Id('section'),
+    ArgList([
+      Pos(Num(level)),
+      Pos(Str(title.trim()))
+    ]),
+    EmptyBlock
+  )
+}
+
+// ### function: declaration
+// @private
+// @type{ Number, Expr, Expr → Expr }
+function declaration(level, kind, value) {
+  return App(
+    kind,
+    ArgList([
+      Pos(Num(level)),
+      Pos(value)
+    ]),
+    EmptyBlock
+  )
+}
+
+// ### function: text
+// @private
+// @type{ Array<Expr> → Expr }
+function text(contents) {
+  return App(
+    Id('text'),
+    ArgList(contents.map(Pos)),
+    EmptyBlock
+  )
+}
+
+// ### function: hardLine
+// @private
+// @type{ Array<Expr> → Expr }
+function hardLine(contents) {
+  return App(
+    Id('line'),
+    ArgList([
+      Pos(text(contents))
+    ]),
+    EmptyBlock
+  )
+}
+
+// ### function: softBreak
+// @private
+// @type{ Void → Expr }
+function softBreak() {
+  return App(
+    Id('soft-break'),
+    ArgList([]),
+    EmptyBlock
+  )
+}
+
+// ### function: paragraph
+// @private
+// @type{ Array<Expr> → Expr }
+function paragraph(contents) {
+  return App(
+    Id('paragraph'),
+    ArgList(contents.map(Pos)),
+    EmptyBlock
+  )
+}
+
+// ### function: bold
+// @private
+// @type{ Expr → Expr }
+function bold(contents) {
+  return App(
+    Id('bold'),
+    ArgList([contents]),
+    EmptyBlock
+  )
+}
+
+// ### function: italic
+// @private
+// @type{ Expr → Expr }
+function bold(contents) {
+  return App(
+    Id('italic'),
+    ArgList([contents]),
+    EmptyBlock
+  )
+}
+
+
+// -- Parsers ----------------------------------------------------------
 
 // ## object: CoreParser
 //
@@ -28,51 +165,58 @@ ometa CoreParser {
   kw :xs = seq(xs) ~(letter | digit | symbol | ':'),
 
   digits = digit+,
-  number = digits:a ('.' digits:b)? -> [#Num, Number(a + '.' + (b || 0))],
+  number = digits:a ('.' digits:b)? 
+        -> Num(toNumber(a, b)),
 
   escapedChar = '\\' '"',
   stringChar  = escapedChar | (~seq('"') char),
-  string      = '"' stringChar*:as '"' -> [#Str, as.join('')],
+  string      = '"' stringChar*:as '"' -> Str(as.join('')),
 
   special   = '{' | '}' | '(' | ')' | '[' | ']' | ':' | '\'' | '"' | '@',
   nameStart = ~(special | digit | space) char,
   nameRest  = ~(special | space) char,
-  name      = <nameStart nameRest*>:a ?(!isReserved(a)) -> [#Id, a],
+  name      = <nameStart nameRest*>:a ?(!isReserved(a)) -> Id(a),
 
-  nil    = kw('nil') -> [#Nil],
-  bool   = kw('true') -> [#Bool, true]
-         | kw('false') -> [#Bool, false],
-  vector = '[' (ws expr)*:xs ws ']' -> [#Vector, xs],
-  symbol = '\'' name:a -> [#Sym, a],
+  nil    = kw('nil')                -> Nil,
+  bool   = kw('true')               -> Bool(true),
+         | kw('false')              -> Bool(false),
+  vector = '[' (ws expr)*:xs ws ']' -> Vector(xs),
+  symbol = '\'' name:a              -> Symbol(a),
+
   value  = number | string | name | symbol | vector | bool | nil,
 
-  call         = '@' name:a callArgs?:b callBlock?:c -> [#App, a, b, c],
+  call         = '@' name:a callArgs?:b callBlock?:c 
+              -> App(a, ArgList(b || []), c || EmptyBlock),
   callArgs     = '(' (ws callExpr)*:xs ws ')' -> xs,
-  callExpr     = name:a ':' ws expr:b -> [#Named, a, b]
-               | expr:a -> [#Pos, a],
+  callExpr     = name:a ':' ws expr:b         -> Named(a, b)
+               | expr:a                       -> Pos(a),
   callBlock    = simpleBlock | rawBlock,
   simpleEscape = '\\' '}',
   simpleChar   = simpleEscape | (~seq('}') char),
-  simpleBlock  = '{' simpleChar*:as '}' -> [#Block, as.join('').trim()],
-  rawBlock     = '{{{' (~seq('}}}') char)*:as '}}}' -> [#Block, as.join('')],
+  simpleBlock  = '{' simpleChar*:as '}'             -> SimpleBlock(as.join('')),
+  rawBlock     = '{{{' (~seq('}}}') char)*:as '}}}' -> RawBlock(as.join('')),
 
-  def  = kw('@define') '(' ws name:a ws args:b ws expr*:c ws ')' -> [#Def, a, b, c],
+  def  = kw('@define') '(' ws name:a ws args:b ws expr*:c ws ')' 
+      -> Define(a, ParamList(b), ExprList(c)),
   args = '[' (ws name)*:as ws ']' -> as,
 
-  letExpr   = kw('@let') '(' ws letVector:a ws expr*:b ws ')' -> [#Let, a, b],
+  letExpr   = kw('@let') '(' ws letVector:a ws expr*:b ws ')' 
+           -> Let(DeclList(a), ExprList(b)),
   letVector = '[' ws letDecl*:a ws ']' -> a,
-  letDecl   = name:a ':' ws expr:b -> [a, b],
+  letDecl   = name:a ':' ws expr:b     -> [a, b],
 
   ifExpr = kw('@if') '(' ws expr:a ws kw('then:') ws expr:b ws kw('else:') ws expr:c ws ')' 
-        -> [#If, a, b, c],
+        -> IfThenElse(a, b, c),
 
-  fun = kw('@fun') '(' ws args:a ws expr*:b ws ')' -> [#Fun, a, b],
+  fun = kw('@fun') '(' ws args:a ws expr*:b ws ')' 
+     -> Fun(ParamList(a), ExprList(b)),
 
-  quote = kw('@raw') '(' ws expr:a ws ')' -> [#Quote, a],
+  quote = kw('@raw') '(' ws expr:a ws ')' 
+       -> Quote(a),
 
   callable = letExpr | ifExpr | fun | def | quote | call,
   expr     = callable | value,
-  document = (ws expr)*:a ws eof -> [#Doc, a]
+  document = (ws expr)*:a ws eof -> Document(ExprList(a))
 }
 
 // ## object: SugaredParser
@@ -83,32 +227,25 @@ ometa SugaredParser <: CoreParser {
   block = heading | paragraph | blankLine | expr,
 
   title   = (~('-') char)+:a -> a.join(''),
-  section = '-'+:a ws title:b ws '-'*
-         -> [#App, [#Id, 'section'], [[#Num, a.length], [#Str, b.trim()]], null],
+  section = '-'+:a ws title:b ws '-'* -> section(a.length, b),
 
-  qualName    = name:a ('.' name)*:bs -> [#Vector, [a].concat(bs)],
-  declaration = '#'+:a ws name:b ':' ws qualName:c ws '#'*
-             -> [#App, [#Id, b], [[#Num, a.length], c], null],
+  qualName    = name:a ('.' name)*:bs -> Vector([a].concat(bs)),
+  declaration = '#'+:a ws name:b ':' ws qualName:c ws '#'* -> declaration(a.length, b, c),
 
+  hardLine  = '|' (hs* text)+:a hs* (eol | eof)              -> hardLine(a),
+  softLine  = (hs* text)+:a hs* (eol | eof)                  -> text(a),
+  blankLine = hs* (eol | eof)                                -> softBreak(),
+  paragraph = (hardLine | softLine)+:a blankLine             -> paragraph(a),
 
-  hardLine  = '|' (hs* text)+:a (eol | eof)
-           -> [#App, [#Id, "line"], [[#App, [#Id, "text"], a, null]], null],
-  softLine  = (hs* text)+:a (eol | eof)
-           -> [#App, [#Id, "text"], a, null],
-  blankLine = hs* eol
-           -> [#App, [#Id, "soft-break"], [], null],
-  paragraph = (hardLine | softLine)+:a (blankLine | eof)
-           -> [#App, [#Id, "paragraph"], a, null],
-
-  strong     = '\\' '*'             -> [#Str, '*']
-             | '*' (hs* text)+:a '*' -> [#App, [#Id, "bold"], a, null],
-  italic     = '\\' '/'             -> [#Str, '/']
-             | '/' (hs* text)+:a '/' -> [#App, [#Id, "italic"], a, null],
+  strong     = '\\' '*'              -> Str('*')
+             | '*' (hs* text)+:a '*' -> bold(text(a)),
+  italic     = '\\' '/'              -> Str('/')
+             | '/' (hs* text)+:a '/' -> italic(text(a)),
   formatting = strong | italic,
 
-  escapeExpr = '\\' '@' -> [#Str, '@'],
+  escapeExpr = '\\' '@' -> Str('@'),
   text       = escapeExpr | callable | formatting | word,
-  word       = (~('*' | '/' | '@' | space) char)+:a -> [#Str, a.join('')],
+  word       = (~('*' | '/' | '@' | space) char)+:a -> Str(a.join('')),
 
-  document = (ws block)*:a ws eof -> [#Doc, a]
+  document = (ws block)*:a ws eof -> Document(ExprList(a))
 }
