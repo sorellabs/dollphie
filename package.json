@@ -2,7 +2,10 @@
   "name": "dollphie",
   "version": "0.0.0",
   "dependencies": {
-    "ometajs": "~3.3.7"
+    "ometajs": "~3.3.7",
+    "data.maybe": "~1.2.0",
+    "core.lambda": "~1.0.0",
+    "boo": "~2.0.0"
   },
   "devDependencies": {
     "lambda-chop": "~0.1.5",

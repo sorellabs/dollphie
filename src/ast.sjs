@@ -43,7 +43,7 @@ union Expr {
   Vector(Array),
   App(Expr, ArgList, Block),
   Define(Id, ParamList, ExprList),
-  Let(Id, DeclList, ExprList),
+  Let(DeclList, ExprList),
   IfThenElse(Expr, Expr, Expr),
   Fun(ParamList, ExprList),
   Quote(Expr),

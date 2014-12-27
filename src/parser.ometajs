@@ -190,11 +190,12 @@ ometa CoreParser {
   callArgs     = '(' (ws callExpr)*:xs ws ')' -> xs,
   callExpr     = name:a ':' ws expr:b         -> Named(a, b)
                | expr:a                       -> Pos(a),
-  callBlock    = simpleBlock | rawBlock,
+  callBlock    = simpleBlock | rawBlock | lineBlock,
   simpleEscape = '\\' '}',
   simpleChar   = simpleEscape | (~seq('}') char),
-  simpleBlock  = '{' simpleChar*:as '}'             -> SimpleBlock(as.join('')),
-  rawBlock     = '{{{' (~seq('}}}') char)*:as '}}}' -> RawBlock(as.join('')),
+  simpleBlock  = '{' simpleChar*:as '}'                  -> SimpleBlock(as.join('')),
+  rawBlock     = '{{{' (~seq('}}}') char)*:as '}}}'      -> RawBlock(as.join('')),
+  lineBlock    = ':' ws (~seq(eol) char)*:as (eol | eof) -> SimpleBlock(as.join('')),
 
   def  = kw('@define') '(' ws name:a ws args:b ws expr*:c ws ')' 
       -> Define(a, ParamList(b), ExprList(c)),
