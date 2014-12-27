@@ -152,7 +152,7 @@ function eval(env, sexp) {
                                                             , xs.map(unboxId)
                                                             , sexps),
 //    Quote(a)                                       => a,
-    Document(xs)                                   => eval(env, xs),
+    Document(ExprList(xs))                         => xs.map(eval(env)),
     ExprList(xs)                                   => last(xs.map(eval(env))) 
                                                   <|> List.Nil
   }
