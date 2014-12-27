@@ -96,7 +96,7 @@ ometa SugaredParser <: CoreParser {
   softLine  = (hs* text)+:a (eol | eof)
            -> [#App, [#Id, "text"], a, null],
   blankLine = hs* eol
-           -> [#App, [#Id, "break"], [], null],
+           -> [#App, [#Id, "soft-break"], [], null],
   paragraph = (hardLine | softLine)+:a (blankLine | eof)
            -> [#App, [#Id, "paragraph"], a, null],
 
