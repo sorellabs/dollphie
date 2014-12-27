@@ -101,9 +101,33 @@ if = "@if" "(" expression "then:" expression "else:" expression ")"
 
 fun = "@fun" "(" args expression* ")"
 
-quote = "@quote" "(" expression ")"
+quote = "@raw" "(" expression ")"
 
 expression = let | if | fun | def | quote | call | value
 document   = expression*
 ```
 
+The sugared dialect has the following grammar:
+
+```hs
+heading = section | declaration
+block = paragraph | expression
+
+section = '-'+ title '-'*
+title = not('-')*
+declaration = '#'+ name [no space here] ':' qualifiedName '#'*
+
+qualifiedName = name ('.' name)*
+
+hardLine = '|' text+ EOL
+softLine = text+ EOL
+blankLine = ws EOL
+paragraph = (hardLine | softLine)+ blankLine
+
+strong = '\\*' | '*' text+ '*'
+italic = '\\/' | '/' text+ '/'
+formatting = strong | italic
+
+text = expression | formatting | word
+word = [anything but whitespace]
+```
