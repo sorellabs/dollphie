@@ -5,7 +5,10 @@
     "ometajs": "~3.3.7",
     "data.maybe": "~1.2.0",
     "core.lambda": "~1.0.0",
-    "boo": "~2.0.0"
+    "boo": "~2.0.0",
+    "core.check": "0.0.1",
+    "core.inspect": "~1.0.1",
+    "deep-equal": "~0.2.1"
   },
   "devDependencies": {
     "lambda-chop": "~0.1.5",
