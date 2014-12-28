@@ -151,7 +151,7 @@ function eval(env, sexp) {
     Fun(ParamList(xs), ExprList(sexps))            => Lambda( env.derive()
                                                             , xs.map(unboxId)
                                                             , sexps),
-//    Quote(a)                                       => a,
+    Quote(a)                                       => a,
     Document(ExprList(xs))                         => xs.map(eval(env)),
     ExprList(xs)                                   => last(xs.map(eval(env))) 
                                                   <|> List.Nil
