@@ -17,11 +17,11 @@ $(LIB_DIR)/%.js: $(SRC_DIR)/%.ometajs
 $(LIB_DIR)/%.js: $(SRC_DIR)/%.sjs
 	mkdir -p $(dir $@)
 	$(sjs) --readable-names \
-	       --sourcemap \
 	       --module lambda-chop/macros \
 	       --module adt-simple/macros \
 	       --module sparkler/macros \
 	       --module es6-macros/macros/destructure \
+	       --module macros.operators \
 	       --output $@ \
 	       $<
 
