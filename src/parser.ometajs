@@ -183,7 +183,7 @@ ometa CoreParser {
   vector = '[' (ws expr)*:xs ws ']' -> Vector(xs),
   symbol = '\'' name:a              -> Symbol(a),
 
-  value  = number | string | name | symbol | vector | bool | nil,
+  value  = number | string | bool | nil | name | symbol | vector,
 
   call         = '@' name:a callArgs?:b callBlock?:c 
               -> App(a, ArgList(b || []), c || EmptyBlock),

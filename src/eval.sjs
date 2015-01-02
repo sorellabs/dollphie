@@ -3,7 +3,9 @@
 // A meta-circular evaluator for Dollphie documents.
 
 // -- Dependencies -----------------------------------------------------
+var show = require('core.inspect');
 var Maybe = require('data.maybe');
+var { unary } = require('core.arity');
 var { curry } = require('core.lambda');
 var { Arg, Block, ArgList, ExprList, DeclList, ParamList, Expr } = require('./ast');
 var { List, Value } = require('./data');
@@ -13,11 +15,18 @@ var { SimpleBlock, RawBlock, EmptyBlock } = Block;
 var { Str, Num, Bool, Id, Symbol, Nil, Vector, App
     , Define, Let, IfThenElse, Fun, Quote, Document } = Expr;
 
-var { Sym:Symbol, Applicative, Lambda } = Value;
+var { Symbol:Sym, Applicative, Lambda, Tagged } = Value;
 
 var keys = Object.keys;
 
 // -- Helpers ----------------------------------------------------------
+
+// ### function: raise
+// @private
+// @type: Error → Void :: throws
+function raise(a) {
+  throw a
+}
 
 // ### function: lookup
 // @private
@@ -43,8 +52,8 @@ function set(o, key, value) {
 // @type: [String], [Value], Object<Value>, Block → Object<Value>
 argsToObject = curry(4, argsToObject);
 function argsToObject(pos, named, block, params) {
- var lamPosArgs = params.filter(λ[named.indexOf(#) === -1]);
-  var lamNamArgs = params.filter(λ[named.indexOf(#) !== -1]);
+  var lamPosArgs = params.filter(λ[!(# in named)]);
+  var lamNamArgs = params.filter(λ[# in named]);
 
   var e1 = lamNamArgs.reduce(λ(r,x) -> set(r, x, named[x]), {});
   var e2 = lamPosArgs.reduce(λ(r,x,i) -> set(r, x, pos[i]), e1);
@@ -65,7 +74,7 @@ function apply(env, op, args, block) {
 
   return match op {
     Applicative(params, f)      => f(toObject(params)),
-    Lambda(env2, params, sexps) => eval(env2.derive(toObject(params), sexps))
+    Lambda(env2, params, sexps) => eval(env2.derive(toObject(params)), sexps)
   }
 }
 
@@ -73,11 +82,11 @@ function apply(env, op, args, block) {
 // @private
 // @type: Environment, [Arg] → #[[Value], Object<Value>]
 function evalArgs(env, xs) {
-  var pos   = xs.filter(λ[# instanceof Pos]).map(λ[#.0]);
-  var named = xs.filter(λ[# instanceof Named]).map(λ[#.0]);
+  var pos   = xs.filter(λ[# instanceof Arg.Pos]).map(λ[#[0]]);
+  var named = xs.filter(λ[# instanceof Arg.Named]);
 
-  return [ pos.map(eval(env))
-         , named.reduce(λ(r, x) -> set(r, x, eval(env, x)), {})
+  return [ pos.map(unary(eval(env)))
+         , named.reduce(λ(r, x) -> set(r, x[0], eval(env, x[1])), {})
          ]
 }
 
@@ -131,30 +140,31 @@ function last(xs) {
 // Evaluates an expression in the given environment.
 //
 // @type: Environment → Expr → Value
-exports.eval = eval = curry(2, eval);
-function eval(env, sexp) {
+var eval = exports.eval = curry(2, eval_);
+function eval_(env, sexp) {
   return match sexp {
-    Str(a)                                         => a,
-    Num(a)                                         => a,
-    Bool(a)                                        => a,
+    Str(a)                                         => Tagged('string', a),
+    Num(a)                                         => Tagged('number', a),
+    Bool(a)                                        => Tagged('boolean', a),
     Id(a)                                          => lookup(a, env),
     Symbol(a)                                      => Sym(a),
     Nil                                            => List.Nil,
     Vector(xs)                                     => xs.map(eval(env)),
     App(op, ArgList(args), b)                      => apply( env
                                                            , eval(env, op)
-                                                           , args.map(eval(env))
+                                                           , evalArgs(env, args)
                                                            , b),
     Define(Id(id), ParamList(xs), ExprList(sexps)) => define(env, id, xs, sexps),
     Let(DeclList(xs), ExprList(sexps))             => evalLet(env, xs, sexps),
     IfThenElse(a, b, c)                            => evalCond(env, a, b, c),
     Fun(ParamList(xs), ExprList(sexps))            => Lambda( env.derive()
-                                                            , xs.map(unboxId)
+                                                            , xs.map(unary(unboxId))
                                                             , sexps),
     Quote(a)                                       => a,
-    Document(ExprList(xs))                         => xs.map(eval(env)),
-    ExprList(xs)                                   => last(xs.map(eval(env))) 
-                                                  <|> List.Nil
+    Document(ExprList(xs))                         => xs.map(unary(eval(env))),
+    ExprList(xs)                                   => last(xs.map(unary(eval(env)))) 
+                                                  <|> List.Nil,
+    a                                              => raise(new TypeError("Can't evaluate: " + show(a)))
   }
 }
 

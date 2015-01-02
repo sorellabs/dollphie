@@ -13,45 +13,32 @@ var { eval } = require('./eval');
 
 // -- Helpers ----------------------------------------------------------
 
-// ### function: describe
-// @private
-// @type: Violation → String
-exports.describe = describe;
-function describe {
-  c.Violation.Tag(a, b)      => show(b) + ' to be of type ' + a,
-  c.Violation.Equality(a, b) => show(b) + ' to equal ' + show(a),
-  c.Violation.Identity(a, b) => show(b) + ' to be ' + show(a),
-  c.Violation.Any(xs)        => xs.map(describe).join(', or '),
-  c.Violation.And(xs)        => xs.map(describe).join(', and ')
-}
-
 // ### function: assert
 // @private
 // @type: Validation[Violation, α] → α :: throws
-exports.assert = assert;
 function assert(val) {
   val.cata({
-    Failure: λ(a) -> { throw new Error('Expected ' + describe(a)) },
+    Failure: λ(a) -> { throw new Error('Expected ' + show(a)) },
     Success: λ[#]
   })
 }
 
 
 // -- Core environment -------------------------------------------------
-var Env = Base.derive({
+var Env = module.exports = Base.derive({
 
   // --- Boolean operations --------------------------------------------
   not:
   Applicative(['value'], function(data) {
-    return data.value === false?     true
-    :      data.value === true?      false
-    :      data.value === List.Nil?  true
-    :      /* otherwise */           false
+    return data.value === false?     Tagged('boolean', true)
+    :      data.value === true?      Tagged('boolean', false)
+    :      data.value === List.Nil?  Tagged('boolean', true)
+    :      /* otherwise */           Tagged('boolean', false)
   }),
 
   'boolean?':
   Applicative(['value'], function(data) {
-    return data.value === false || data.value === true
+    return Tagged('boolean', data.value === false || data.value === true)
   }),
 
   // --- Numeric operations --------------------------------------------
@@ -79,6 +66,16 @@ var Env = Base.derive({
     return data.left / data.right
   }),
 
+  paragraph:
+  Applicative(['value'], function(data) {
+    return data.value
+  }),
+
+  text:
+  Applicative(['value'], function(data) {
+    return data.value
+  }),
+  
   // --- Comparison operations -----------------------------------------
   '=':
   Applicative(['left', 'right'], function(data) {
@@ -152,8 +149,6 @@ var Env = Base.derive({
     }
   }),
 
-  
-  
 
 });
 
