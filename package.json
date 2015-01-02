@@ -1,6 +1,9 @@
 {
   "name": "dollphie",
   "version": "0.0.0",
+  "bin": {
+    "dollphie": "bin/dollphie"
+  },
   "dependencies": {
     "ometajs": "~3.3.7",
     "data.maybe": "~1.2.0",
