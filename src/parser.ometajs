@@ -73,9 +73,10 @@ function section(level, title) {
 // @type{ Number, Expr, Expr → Expr }
 function declaration(level, kind, value) {
   return App(
-    kind,
+    Id('declaration'),
     ArgList([
       Pos(Num(level)),
+      Pos(kind),
       Pos(value)
     ]),
     EmptyBlock
@@ -142,7 +143,7 @@ function bold(contents) {
 // ### function: italic
 // @private
 // @type{ Expr → Expr }
-function bold(contents) {
+function italic(contents) {
   return App(
     Id('italic'),
     ArgList([contents]),
