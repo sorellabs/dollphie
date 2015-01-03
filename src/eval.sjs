@@ -68,7 +68,7 @@ function argsToObject(pos, named, block, params) {
 
 // ### function: apply
 // @private
-// @type: Environment, Value, Object<Value>, Block → Value
+// @type: Environment, Value, #[[Value], Object<Value>], Block → Value
 function apply(env, op, args, block) {
   var toObject = argsToObject(args[0], args[1], block);
 
@@ -82,11 +82,18 @@ function apply(env, op, args, block) {
 // @private
 // @type: Environment, [Arg] → #[[Value], Object<Value>]
 function evalArgs(env, xs) {
-  var pos   = xs.filter(λ[# instanceof Arg.Pos]).map(λ[#[0]]);
+  var pos   = xs.filter(λ[# instanceof Arg.Pos]).map(val);
   var named = xs.filter(λ[# instanceof Arg.Named]);
+  function id {
+    Arg.Named(Id(a), *) => a
+  }
+  function val {
+    Arg.Named(*, a) => a,
+    Arg.Pos(a) => a
+  }
 
   return [ pos.map(unary(eval(env)))
-         , named.reduce(λ(r, x) -> set(r, x[0], eval(env, x[1])), {})
+         , named.reduce(λ(r, x) -> set(r, id(x), eval(env, val(x))), {})
          ]
 }
 
@@ -143,13 +150,13 @@ function last(xs) {
 var eval = exports.eval = curry(2, eval_);
 function eval_(env, sexp) {
   return match sexp {
-    Str(a)                                         => Tagged('string', a),
-    Num(a)                                         => Tagged('number', a),
-    Bool(a)                                        => Tagged('boolean', a),
+    Str(a)                                         => a,
+    Num(a)                                         => a,
+    Bool(a)                                        => a,
     Id(a)                                          => lookup(a, env),
     Symbol(a)                                      => Sym(a),
-    Nil                                            => List.Nil,
-    Vector(xs)                                     => xs.map(eval(env)),
+    Nil                                            => [],
+    Vector(xs)                                     => xs.map(unary(eval(env))),
     App(op, ArgList(args), b)                      => apply( env
                                                            , eval(env, op)
                                                            , evalArgs(env, args)
