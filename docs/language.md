@@ -17,30 +17,32 @@ particular output format.
 
 A documentation for a module could be written in Dollphie as follows:
 
-    # module: Operators
+# module: Operators
 
-    Provides operators as first-class functions.
+Provides operators as first-class functions.
 
-    -- Core operators --------------------------------------------------
+-- Core operators --------------------------------------------------
 
-    ### function: add
+### function: add
 
-    Returns the sum of two *numbers*.
-
+Returns the sum of two *numbers*.
+```javascript
     @type{Number -> Number -> Number}
     @code('js) ::
       function add(a){ return function(b) {
         return a + b
       }}
+```
+-- Exports ---------------------------------------------------------
 
-    -- Exports ---------------------------------------------------------
-
+```javascript
     @code('js){{{
       module.exports = add
     }}}
+```
 
 Once we desugar the document, we get the following Dollphie code:
-
+```javascript
     @module(1 "Operators")
     @text("Provides operators as first-class functions.")
     @section(2 "Core operators")
@@ -52,7 +54,7 @@ Once we desugar the document, we get the following Dollphie code:
     }}")
     @section(2 "Exports")
     @code('js "module.exports = add")
-
+```
 
 ## 1. Formal syntax
 
