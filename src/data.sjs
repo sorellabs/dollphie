@@ -28,6 +28,6 @@ union Value {
   Symbol(String),
   Applicative(Array, Function),
   Lambda(isEnvironment, Array, Array),
-  Tagged(String, *)
+  Tagged(Symbol, *)
 } deriving (Base, Cata)
 exports.Value = Value;
