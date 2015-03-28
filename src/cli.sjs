@@ -22,7 +22,7 @@ var doc = [
 var docopt = require('docopt').docopt;
 var inspect = require('core.inspect');
 var pkg = require('../package.json');
-var { parse, prelude, evaluate } = require('./');
+var { parse, prelude, evaluate } = require('./language/');
 var fs = require('fs');
 
 

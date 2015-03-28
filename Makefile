@@ -5,7 +5,10 @@ sjs = $(bin)/sjs
 # -- CONFIGURATION -----------------------------------------------------
 LIB_DIR = lib
 SRC_DIR = src
-SRC = $(wildcard $(SRC_DIR)/*.sjs $(SRC_DIR)/*.ometajs)
+SRC = $(wildcard $(SRC_DIR)/*.sjs \
+                 $(SRC_DIR)/**/*.sjs \
+                 $(SRC_DIR)/*.ometajs \
+                 $(SRC_DIR)/**/*.ometajs)
 TGT = ${SRC:$(SRC_DIR)/%.sjs=$(LIB_DIR)/%.js} ${SRC:$(SRC_DIR)/%.ometajs=$(LIB_DIR)/%.js}
 
 
