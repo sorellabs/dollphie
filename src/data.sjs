@@ -4,6 +4,7 @@
 
 // -- Dependencies -----------------------------------------------------
 var { Base, Cata } = require('adt-simple');
+var show = require('core.inspect');
 
 
 // -- Helpers ----------------------------------------------------------
@@ -31,3 +32,15 @@ union Value {
   Tagged(Symbol, *)
 } deriving (Base, Cata)
 exports.Value = Value;
+
+Tagged::toString = function() {
+  return 'Tagged(' + show(this[0]) + ', ' + show(this[1]) + ')'
+}
+
+Applicative::toString = function() {
+  return 'Applicative(' + show(this[0]) + ', ' + this[1] + ')'
+}
+
+Lambda::toString = function() {
+  return 'Lambda(' + show(this[0]) + ', ' + show(this[1]) + ', ' + show(this[2]) + ')'
+}
