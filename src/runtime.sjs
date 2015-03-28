@@ -3,14 +3,16 @@
 // Provides the base runtime.
 
 // -- Dependencies -----------------------------------------------------
-var c = require('core.check');
-var show = require('core.inspect');
+var c     = require('core.check');
+var show  = require('core.inspect');
 var Maybe = require('data.maybe');
 var equal = require('deep-equal');
-var { curry } = require('core.lambda');
-var { Base } = require('boo');
-var { List, Value:{ Applicative, Symbol, Lambda, Tagged } } = require('./data');
-var { eval } = require('./eval');
+var { curry }       = require('core.lambda');
+var { Base }        = require('boo');
+var { List, Value } = require('./data');
+var { eval }        = require('./eval');
+
+var { Applicative, Symbol, Lambda, Tagged, Section, Declaration } = Value;
 
 
 // -- Helpers ----------------------------------------------------------
@@ -48,7 +50,6 @@ var bool = unbox(c.Boolean);
 
 // -- Core environment -------------------------------------------------
 var Env = module.exports = Base.derive({
-
   // -- Core operations ------------------------------------------------
   tag:
   Applicative(['tag', 'value'], function(data) {
@@ -187,13 +188,17 @@ var Env = module.exports = Base.derive({
   
   declaration:
   Applicative(['kind', 'name', 'children'], function(data) {
-    return Tagged(Symbol('declaration'), data)
+    return Tagged(Symbol('declaration'),
+                  { kind: data.kind,
+                    name: data.name,
+                    children: data.children })
   }),
 
   section:
   Applicative(['title', 'children'], function(data) {
-    return Tagged(Symbol('section'), data)
+    return Tagged(Symbol('section'),
+                  { title: data.title,
+                    children: data.children })
   })
-
-});
+})
 
