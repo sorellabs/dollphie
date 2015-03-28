@@ -47,6 +47,7 @@ union Expr {
   IfThenElse(Expr, Expr, Expr),
   Fun(ParamList, ExprList),
   Quote(Expr),
-  Document(ExprList)
+  Document(ExprList),
+  Context(Number /* depth */, Function /* ([Expr] -> Expr) Regrouping */)
 } deriving (Base, Cata)
 exports.Expr = Expr;

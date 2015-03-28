@@ -41,17 +41,17 @@ A documentation for a module could be written in Dollphie as follows:
 
 Once we desugar the document, we get the following Dollphie code:
 
-    @module(1 "Operators")
-    @text("Provides operators as first-class functions.")
-    @section(2 "Core operators")
-    @function(3 "add")
-    @text("Returns the sum of two " @bold("numbers."))
-    @type("Number -> Number -> Number")
-    @code('js "function add(a){ return function(b) {
-      return a + b
-    }}")
-    @section(2 "Exports")
-    @code('js "module.exports = add")
+    @module("Operators" [
+      @text("Provides operators as first-class functions.")
+      @section("Core operators" [
+        @function("add" [
+          @text("Returns the sum of two " @bold("numbers."))
+          @type(block: "Number -> Number -> Number")
+          @code('js block: "function add(a){ return function(b) {
+            return a + b
+          }}")])])
+      @section("Exports" [
+        @code('js block: "module.exports = add")])])
 
 
 ## 1. Formal syntax

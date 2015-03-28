@@ -2,15 +2,16 @@
 //
 // The Dollphie documentation language.
 
-var parser    = require('./parser');
-var evaluator = require('./eval');
-var runtime   = require('./runtime');
-var { curry } = require('core.lambda');
+var parser      = require('./parser');
+var evaluator   = require('./eval');
+var runtime     = require('./runtime');
+var { desugar } = require('./transformations');
+var { curry }   = require('core.lambda');
 
 
 exports.parse = parse;
 function parse(text) {
-  return parser.SugaredParser.matchAll(text, 'document');
+  return desugar(parser.SugaredParser.matchAll(text, 'document'));
 }
 
 exports.parseCore = parseCore;
