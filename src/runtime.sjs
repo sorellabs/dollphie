@@ -5,6 +5,7 @@
 // -- Dependencies -----------------------------------------------------
 var c = require('core.check');
 var show = require('core.inspect');
+var Maybe = require('data.maybe');
 var equal = require('deep-equal');
 var { curry } = require('core.lambda');
 var { Base } = require('boo');
@@ -33,7 +34,7 @@ function raise(e) {
 
 // ### function: unbox
 // @private
-// @type: String -> Tagged -> Any
+// @type: String -> Tagged -> Any :: throws
 unbox = curry(2, unbox);
 function unbox(tag, val) {
   assert(tag(val));
@@ -47,6 +48,12 @@ var bool = unbox(c.Boolean);
 
 // -- Core environment -------------------------------------------------
 var Env = module.exports = Base.derive({
+
+  // -- Core operations ------------------------------------------------
+  tag:
+  Applicative(['tag', 'value'], function(data) {
+    Tagged(data.tag, data.value)
+  }),
 
   // --- Boolean operations --------------------------------------------
   not:
@@ -84,16 +91,6 @@ var Env = module.exports = Base.derive({
     return num(data.left) / num(data.right)
   }),
 
-  paragraph:
-  Applicative(['value'], function(data) {
-    return data.value
-  }),
-
-  text:
-  Applicative(['value'], function(data) {
-    return data.value
-  }),
-  
   // --- Comparison operations -----------------------------------------
   '=':
   Applicative(['left', 'right'], function(data) {
@@ -157,6 +154,46 @@ var Env = module.exports = Base.derive({
     }
   }),
 
+  // -- Text -----------------------------------------------------------
+  paragraph:
+  Applicative(['value'], function(data) {
+    return Tagged(Symbol('paragraph'), data.value)
+  }),
+
+  text:
+  Applicative(['value'], function(data) {
+    return Tagged(Symbol('text'), data.value)
+  }),
+
+  bold:
+  Applicative(['value'], function(data) {
+    return Tagged(Symbol('bold'), data.value)
+  }),
+
+  italic:
+  Applicative(['value'], function(data) {
+    return Tagged(Symbol('italic'), data.value)
+  }),
+
+  'soft-break':
+  Applicative(['value'], function(data) {
+    return Tagged(Symbol('soft-break'), data.value)
+  }),
+
+  line:
+  Applicative(['value'], function(data) {
+    return Tagged(Symbol('line'), data.value)
+  }),
+  
+  declaration:
+  Applicative(['kind', 'name', 'children'], function(data) {
+    return Tagged(Symbol('declaration'), data)
+  }),
+
+  section:
+  Applicative(['title', 'children'], function(data) {
+    return Tagged(Symbol('section'), data)
+  })
 
 });
 
