@@ -26,21 +26,48 @@ union List {
 exports.List = List;
 
 union Value {
-  Symbol(String),
-  Applicative(Array, Function),
-  Lambda(isEnvironment, Array, Array),
-  Tagged(Symbol, *)
+  Symbol { value: String },
+  Applicative { args: Array, fn: Function },
+  Lambda { env: isEnvironment, args: Array, body: Array },
+  Tagged { tag: Symbol, value: * }
 } deriving (Base, Cata)
 exports.Value = Value;
 
-Tagged::toString = function() {
-  return 'Tagged(' + show(this[0]) + ', ' + show(this[1]) + ')'
-}
 
 Applicative::toString = function() {
-  return 'Applicative(' + show(this[0]) + ', ' + this[1] + ')'
+  return 'Applicative(' + show(this.args) + ', ' + this.fn + ')'
 }
 
 Lambda::toString = function() {
-  return 'Lambda(' + show(this[0]) + ', ' + show(this[1]) + ', ' + show(this[2]) + ')'
+  return 'Lambda(' + show(this.env) + ', ' + show(this.args) + ', ' + show(this.body) + ')'
 }
+
+Tagged::toString = function() {
+  return 'Tagged(' + show(this.tag) + ', ' + show(this.value) + ')'
+}
+
+
+
+Symbol::toJSON = function() {
+  return {
+    "#type": "Dollphie.Symbol",
+    "value": this.value
+  }
+}
+
+Applicative::toJSON = function() {
+  throw new Error("Applicatives aren't serialisable.")
+}
+
+Lambda::toJSON = function() {
+  throw new Error("Lambdas aren't serialisable.")
+}
+
+Tagged::toJSON = function() {
+  return {
+    "#type": "Dollphie.Tagged",
+    "tag": this.tag,
+    "value": this.value
+  }
+}
+
