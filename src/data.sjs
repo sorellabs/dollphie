@@ -66,7 +66,7 @@ Lambda::toJSON = function() {
 Tagged::toJSON = function() {
   return {
     "#type": "Dollphie.Tagged",
-    "tag": this.tag,
+    "tag": this.tag.value, // No need to keep the symbol wrapper here
     "value": this.value
   }
 }
