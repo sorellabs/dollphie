@@ -118,7 +118,9 @@ function declaration(level, kind, value) {
 function text(contents) {
   return App(
     Id('text'),
-    ArgList(contents.map(Pos)),
+    ArgList([
+      Pos(Vector(contents))
+    ]),
     EmptyBlock
   )
 }
@@ -153,7 +155,9 @@ function softBreak() {
 function paragraph(contents) {
   return App(
     Id('paragraph'),
-    ArgList(contents.map(Pos)),
+    ArgList([
+      Pos(Vector(contents))
+    ]),
     EmptyBlock
   )
 }
@@ -164,7 +168,9 @@ function paragraph(contents) {
 function bold(contents) {
   return App(
     Id('bold'),
-    ArgList([contents]),
+    ArgList([
+      Pos(contents)
+    ]),
     EmptyBlock
   )
 }
@@ -175,7 +181,9 @@ function bold(contents) {
 function italic(contents) {
   return App(
     Id('italic'),
-    ArgList([contents]),
+    ArgList([
+      Pos(contents)
+    ]),
     EmptyBlock
   )
 }
