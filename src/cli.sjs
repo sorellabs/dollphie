@@ -26,6 +26,7 @@ var fs = require('fs');
 
 
 // -- Helpers ----------------------------------------------------------
+var log  = console.log.bind(console)
 var show = λ(a) -> a == null? null : console.log(inspect(a));
 var read = λ[fs.readFileSync(#, 'utf-8')];
 var ast  = read ->> parse;
@@ -36,8 +37,8 @@ var run  = ast ->> evaluate(prelude());
 module.exports = function Main() {
   var args = docopt(doc, { help: false });
 
-  ; args['--help']?     show(doc)
-  : args['--version']?  show('Dollphie version ' + pkg.version)
+  ; args['--help']?     log(doc)
+  : args['--version']?  log('Dollphie version ' + pkg.version)
   : args['--ast']?      show(ast(args['<file>']))
   : /* otherwise */     show(run(args['<file>']))
 }
