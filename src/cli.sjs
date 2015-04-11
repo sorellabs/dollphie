@@ -13,6 +13,7 @@ var doc = [
   '',
   'Options:',
   '  -a, --ast                  Displays the AST instead of interpreting',
+  '  -r, --raw                  Displays the raw Dollphie source',
   '  -h, --help                 Displays this screen',
   '  -v, --version              Displays the version number',
   '',
@@ -91,6 +92,7 @@ module.exports = function Main() {
   var preProcess  = transformationsFor(preProcessing, args);
   var process     = read ->> preProcess ->> run ->> postProcess;
   var ast         = read ->> preProcess ->> parse ->> postProcess;
+  var raw         = read ->> preProcess;
 
   ; args['--help']?             log(doc.replace(/^#/gm, ''))
   : args['--version']?          log('Dollphie version ' + pkg.version)
@@ -99,6 +101,7 @@ module.exports = function Main() {
   : args['--list-output']?      log(list(outputters))
   : args['--list-input']?       log(list(inputters))
 
+  : args['--raw']?              show(raw(args['<file>']))
   : args['--ast']?              show(ast(args['<file>']))
   : /* otherwise */             show(process(args['<file>']))
 
