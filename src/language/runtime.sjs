@@ -199,6 +199,24 @@ var Env = module.exports = Base.derive({
     return Tagged(Symbol('section'),
                   { title: data.title,
                     children: data.children })
+  }),
+
+  code:
+  Applicative(['language', 'code'], function(data) {
+    return Tagged(Symbol('code'),
+                  { language: data.language,
+                    code: data.code })
+                    
+  }),
+
+  'private':
+  Applicative([], function(){
+    return Tagged(Symbol('private'))
+  }),
+
+  type:
+  Applicative(['type'], function(data) {
+    return Tagged(Symbol('type'), data.type)
   })
 })
 

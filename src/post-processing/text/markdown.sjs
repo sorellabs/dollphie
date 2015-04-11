@@ -29,10 +29,10 @@ function transformation {
     Tagged(Symbol('text'), xs.map(transformation)),
 
   Tagged(Symbol('bold'), Tagged(Symbol('text'), xs)) => 
-    Tagged(Symbol('text'), ['**'] +++ xs +++ ['**']),
+    '**' + xs.map(transformation) + '**',
 
   Tagged(Symbol('italic'), Tagged(Symbol('text'), xs)) =>
-    Tagged(Symbol('text'), ['*'] +++ xs +++ ['*']),
+    '*' + xs.map(transformation) + '*',
 
   Tagged(t, data) => Tagged(t, transformation(data)),
 

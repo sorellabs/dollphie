@@ -233,7 +233,7 @@ ometa CoreParser {
   simpleChar   = simpleEscape | (~seq('}') char),
   simpleBlock  = '{' simpleChar*:as '}'                  -> SimpleBlock(as.join('')),
   rawBlock     = '{{{' (~seq('}}}') char)*:as '}}}'      -> RawBlock(as.join('')),
-  lineBlock    = ':' ws (~seq(eol) char)*:as (eol | eof) -> SimpleBlock(as.join('')),
+  lineBlock    = ':' ws (~eol char)*:as (eol | eof) -> SimpleBlock(as.join('')),
 
   def  = kw('@define') '(' ws name:a ws args:b ws expr*:c ws ')' 
       -> Define(a, ParamList(b), ExprList(c)),

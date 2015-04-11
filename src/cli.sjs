@@ -7,6 +7,7 @@ var doc = [
   '',
   'Usage:',
   '  dollphie [options] <file>',
+  '  dollphie (--list-formatters | --list-input | --list-output)',
   '  dollphie --version',
   '  dollphie --help',
   '',
@@ -16,11 +17,15 @@ var doc = [
   '  -v, --version              Displays the version number',
   '',
   '#Transformations:',
+  '  --input=<FORMAT>           Convert from the given input format (see --list-input)',
+  '  --output=<FORMAT>          The output format for the docs (see --list-output)',
   '  --formatter=<TEXT>         The format used for the text (see --list-formatters)',
   '  --json                     Serialises the output to JSON',
   '',
   '#Specific help topics:',
-  '  --list-formatters          Lists available text formatters'
+  '  --list-formatters          Lists available text formatters',
+  '  --list-output              Lists available output formats',
+  '  --list-input               Lists available input formats'
 ].join('\n');
 
 
@@ -30,6 +35,8 @@ var inspect = require('core.inspect');
 var pkg = require('../package.json');
 var { parse, prelude, evaluate } = require('./language/');
 var formatters = require('./post-processing/text');
+var outputters = require('./output');
+var inputters = require('./pre-processing/input-conversion');
 var fs = require('fs');
 
 
@@ -39,33 +46,37 @@ var maybeFn = λ f a -> a == null? null : f(a);
 var show    = maybeFn(inspectComplex ->> log);
 var json    = maybeFn(λ[JSON.stringify(#, null, 2)]);
 var read    = λ[fs.readFileSync(#, 'utf-8')];
-var ast     = read ->> parse;
-var run     = ast ->> evaluate(prelude());
+var run     = parse ->> evaluate(prelude());
 
 function inspectComplex {
   a @ String => a,
   any        => inspect(any)
 }
 
-function listFormatters() {
-  return Object.keys(formatters).map(function(formatter) {
-    return '- ' + formatter + '\n    ' + formatters[formatter].description
+function list(transforms) {
+  return Object.keys(transforms).map(function(transform) {
+    return '- ' + transform + '\n    ' + transforms[transform].description
   }).join('\n')
 }
 
-function selectFormatter(key) {
-  if (!(key in formatters)) {
-    throw new ReferenceError("Unknown formatter: " + key);
+function select(desc, what){ return function(key) {
+  if (!(key in what)) {
+    throw new ReferenceError("Unknown " + desc + ": " + key);
   }
-  return formatters[key].transformation
-}
+  return what[key].transformation
+}}
 
-var transformations = [
-  ['--formatter', selectFormatter],
+var postProcessing = [
+  ['--formatter', select("formatter", formatters)],
+  ['--output', select("output format", outputters)],
   ['--json', λ[json]]
 ]
 
-function transformationsFor(args) {
+var preProcessing = [
+  ['--input', select("input format", inputters)]
+]
+
+function transformationsFor(transformations, args) {
   return transformations.map(function(t) {
     return args[t[0]]?      t[1](args[t[0]])
     :      /* otherwise */  null
@@ -76,10 +87,19 @@ function transformationsFor(args) {
 // -- Main -------------------------------------------------------------
 module.exports = function Main() {
   var args = docopt(doc.replace(/^#[^\r\n]*/gm, ''), { help: false });
+  var postProcess = transformationsFor(postProcessing, args);
+  var preProcess  = transformationsFor(preProcessing, args);
+  var process     = read ->> preProcess ->> run ->> postProcess;
+  var ast         = read ->> preProcess ->> parse ->> postProcess;
 
   ; args['--help']?             log(doc.replace(/^#/gm, ''))
   : args['--version']?          log('Dollphie version ' + pkg.version)
-  : args['--list-formatters']?  log(listFormatters())
+
+  : args['--list-formatters']?  log(list(formatters))
+  : args['--list-output']?      log(list(outputters))
+  : args['--list-input']?       log(list(inputters))
+
   : args['--ast']?              show(ast(args['<file>']))
-  : /* otherwise */             show(transformationsFor(args)(run(args['<file>'])))
+  : /* otherwise */             show(process(args['<file>']))
+
 }
