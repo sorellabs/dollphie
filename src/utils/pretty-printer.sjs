@@ -39,7 +39,7 @@ function flatten {
   TEXT(s)        => TEXT(s),
   LINE           => TEXT(""),
   UNION(a, b)    => flatten(a),
-  a => (function(){ throw new Error("No match: " + a) })();
+  a              => (function(){ throw new Error("No match: " + a) })();
 }
 
 // @type: Int, Int, DOC → DOC

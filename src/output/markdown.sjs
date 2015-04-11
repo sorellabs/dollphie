@@ -34,7 +34,7 @@ function generate(depth, ast) {
   return match ast {
     Tagged(Symbol('paragraph'), xs) =>
       pp.spread([
-        pp.fill(xs.map(unary(generate(depth)))),
+        pp.spread(xs.map(unary(generate(depth)))),
         pp.line()
       ]),
   
