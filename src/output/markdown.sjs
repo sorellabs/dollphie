@@ -39,7 +39,7 @@ function generate(depth, ast) {
       ]),
   
     Tagged(Symbol('text'), xs) =>
-      pp.spread(xs.map(unary(generate(depth)))),
+      pp.foldDoc(pp.concat, xs.map(unary(generate(depth)))),
   
     Tagged(Symbol('soft-break'), xs) =>
       pp.fill(xs.map(unary(generate(depth)))),

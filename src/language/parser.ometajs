@@ -263,7 +263,7 @@ ometa CoreParser {
 // A parser for the sugared language dialect.
 ometa SugaredParser <: CoreParser {
   heading = hs* (section | declaration):a hs* (eol | eof) -> a,
-  block = heading | paragraph | blankLine | expr,
+  block = heading | paragraph | blankLine,
 
   title   = (~('-') char)+:a -> a.join(''),
   section = '-'+:a hs* title:b hs* '-'* -> section(a.length, b),
@@ -271,20 +271,20 @@ ometa SugaredParser <: CoreParser {
   qualName    = name:a ('.' name)*:bs -> Vector([a].concat(bs)),
   declaration = '#'+:a hs* name:b ':' hs* qualName:c hs* '#'* -> declaration(a.length, b, c),
 
-  hardLine  = hs* '|' (hs* text)+:a hs* (eol | eof)          -> hardLine(a),
-  softLine  = (hs* text)+:a hs* (eol | eof)                  -> text(a),
-  blankLine = hs* (eol | eof)                                -> softBreak(),
-  paragraph = (hardLine | softLine)+:a blankLine             -> paragraph(a),
+  hardLine  = hs* '|' text+:a (eol | eof)          -> hardLine(a),
+  softLine  = ~blankLine text+:a (eol | eof)       -> text(a),
+  blankLine = hs* (eol | eof)                      -> softBreak(),
+  paragraph = (hardLine | softLine)+:a blankLine   -> paragraph(a),
 
-  strong     = '\\' '*'              -> Str('*')
-             | '*' (hs* text)+:a '*' -> bold(text(a)),
-  italic     = '\\' '/'              -> Str('/')
-             | '/' (hs* text)+:a '/' -> italic(text(a)),
+  strong     = '\\' '*'        -> Str('*')
+             | '*' text+:a '*' -> bold(text(a)),
+  italic     = '\\' '/'        -> Str('/')
+             | '/' text+:a '/' -> italic(text(a)),
   formatting = strong | italic,
 
   escapeExpr = '\\' '@' -> Str('@'),
   text       = escapeExpr | callable | formatting | word,
-  word       = (~('*' | '/' | '@' | space) char)+:a -> Str(a.join('')),
+  word       = (~('\\' | '*' | '/' | '@' | eol) char)+:a -> Str(a.join('')),
 
   document = (ws block)*:a ws eof -> Document(ExprList(a))
 }
