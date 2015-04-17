@@ -47,13 +47,22 @@ var str = unbox(c.String);
 var num = unbox(c.Number);
 var bool = unbox(c.Boolean);
 
+function meta(key, value) {
+  return Tagged(Symbol('meta'), { key: key, value: value })
+}
+
 
 // -- Core environment -------------------------------------------------
 var Env = module.exports = Base.derive({
   // -- Core operations ------------------------------------------------
   tag:
   Applicative(['tag', 'value'], function(data) {
-    Tagged(data.tag, data.value)
+    return Tagged(data.tag, data.value)
+  }),
+
+  meta:
+  Applicative(['key', 'value'], function(data) {
+    return meta(data.key, data.value)
   }),
 
   // --- Boolean operations --------------------------------------------
@@ -191,6 +200,7 @@ var Env = module.exports = Base.derive({
     return Tagged(Symbol('declaration'),
                   { kind: data.kind,
                     name: data.name,
+                    meta: {},
                     children: data.children })
   }),
 
@@ -198,6 +208,7 @@ var Env = module.exports = Base.derive({
   Applicative(['title', 'children'], function(data) {
     return Tagged(Symbol('section'),
                   { title: data.title,
+                    meta: {},
                     children: data.children })
   }),
 
@@ -211,12 +222,12 @@ var Env = module.exports = Base.derive({
 
   'private':
   Applicative([], function(){
-    return Tagged(Symbol('private'))
+    return meta('private', true)
   }),
 
   type:
-  Applicative(['type'], function(data) {
-    return Tagged(Symbol('type'), data.type)
+  Applicative(['block'], function(data) {
+    return meta('type', data.block)
   })
 })
 
