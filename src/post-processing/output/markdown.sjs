@@ -6,9 +6,9 @@
 var extend  = require('xtend');
 var { curry } = require('core.lambda');
 var { unary } = require('core.arity');
-var { Value: { Symbol, Applicative, Lambda, Tagged }} = require('../language/data');
-var preProcess = require('../post-processing/text/markdown').transformation;
-var pp = require('../utils/pretty-printer');
+var { Value: { Symbol, Applicative, Lambda, Tagged }} = require('../../language/data');
+var preProcess = require('../text/markdown').transformation;
+var pp = require('../../utils/pretty-printer');
 
 // -- Helpers ----------------------------------------------------------
 function repeat(n, s) {

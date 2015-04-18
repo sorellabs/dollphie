@@ -37,7 +37,7 @@ var pkg = require('../package.json');
 var fs = require('fs');
 var { parse, prelude, evaluate } = require('./language/');
 var formatters = require('./post-processing/text');
-var outputters = require('./output');
+var outputters = require('./post-processing/output');
 var inputters = require('./pre-processing/input-conversion');
 
 var aggregate = require('./post-processing/aggregate');
