@@ -34,11 +34,14 @@ var doc = [
 var docopt = require('docopt').docopt;
 var inspect = require('core.inspect');
 var pkg = require('../package.json');
+var fs = require('fs');
 var { parse, prelude, evaluate } = require('./language/');
 var formatters = require('./post-processing/text');
 var outputters = require('./output');
 var inputters = require('./pre-processing/input-conversion');
-var fs = require('fs');
+
+var aggregate = require('./post-processing/aggregate');
+
 
 
 // -- Helpers ----------------------------------------------------------
@@ -67,6 +70,8 @@ function select(desc, what){ return function(key) {
   return what[key].transformation
 }}
 
+var normalise = aggregate;
+
 var postProcessing = [
   ['--formatter', select("formatter", formatters)],
   ['--output', select("output format", outputters)],
@@ -90,7 +95,7 @@ module.exports = function Main() {
   var args = docopt(doc.replace(/^#[^\r\n]*/gm, ''), { help: false });
   var postProcess = transformationsFor(postProcessing, args);
   var preProcess  = transformationsFor(preProcessing, args);
-  var process     = read ->> preProcess ->> run ->> postProcess;
+  var process     = read ->> preProcess ->> run ->> normalise ->> postProcess;
   var ast         = read ->> preProcess ->> parse ->> postProcess;
   var raw         = read ->> preProcess;
 

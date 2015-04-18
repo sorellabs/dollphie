@@ -18,13 +18,30 @@ function repeat(n, s) {
 function sanitise(s) {
   return s.replace(/([\*_`\-#])/g, '\\$1')
 }
+
+function field(name, value) {
+  if (value == null) {
+    return pp.nil()
+  } else {
+    return pp.concat(
+      pp.spread([
+        pp.text('- **' + name + '**:'),
+        pp.text(String(value))
+      ]),
+      pp.line()
+    )
+  }
+}
+
 // @type: Int, String, [Expr] → PrettyPrinter.DOC
-function section(depth, heading, children) {
+function section(depth, heading, meta, children) {
   return pp.stack([
     pp.concat(
       pp.spread([pp.text(repeat(depth, '#')), pp.text(heading)]),
       pp.line()
-    )
+    ),
+    field('Signature', meta.type),
+    field('Private', meta['private'])
   ] +++ children.map(unary(generate(depth + 1))))
 }
 
@@ -51,10 +68,11 @@ function generate(depth, ast) {
     Tagged(Symbol('declaration'), x) =>
       section(depth,
               x.kind + ': `' + sanitise(x.name.join('.')) + '`',
+              x.meta,
               x.children),
 
     Tagged(Symbol('section'), x) =>
-      section(depth, x.title, x.children),
+      section(depth, x.title, {}, x.children),
 
     Tagged(Symbol('code'), x) =>
       pp.stack([
@@ -62,6 +80,8 @@ function generate(depth, ast) {
       ] +++ x.code.split(/\r\n|\r|\n/).map(pp.text) +++ [
         pp.concat(pp.text('```'), pp.line())
       ]),
+
+    Tagged(Symbol('meta'), *) => pp.nil(),
   
     xs @ Array => pp.stack(xs.map(unary(generate(depth)))),
     node => pp.text(node.toString())
