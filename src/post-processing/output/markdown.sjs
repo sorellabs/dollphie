@@ -6,7 +6,7 @@
 var extend  = require('xtend');
 var { curry } = require('core.lambda');
 var { unary } = require('core.arity');
-var { Value: { Symbol, Applicative, Lambda, Tagged }} = require('../../language/data');
+var { Value: { Symbol, Applicative, Lambda, Tagged, Raw }} = require('../../language/data');
 var preProcess = require('../text/markdown').transformation;
 var pp = require('../../utils/pretty-printer');
 
@@ -16,7 +16,7 @@ function repeat(n, s) {
 }
 
 function sanitise(s) {
-  return s.replace(/([\*_`\-#])/g, '\\$1')
+  return String(s).replace(/([`])/g, '\\$1')
 }
 
 function renderStability(v) {
@@ -114,7 +114,8 @@ function generate(depth, ast) {
     Tagged(Symbol('meta'), *) => pp.nil(),
   
     xs @ Array => pp.stack(xs.map(unary(generate(depth)))),
-    node => pp.text(node.toString().replace(/([\*_\-#])/g, '\\$1'))
+    Raw(v) => pp.text(String(v)),
+    node => pp.text(String(node))
   }
 }
 

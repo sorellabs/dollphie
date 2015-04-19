@@ -29,7 +29,8 @@ union Value {
   Symbol { value: String },
   Applicative { args: Array, fn: Function },
   Lambda { env: isEnvironment, args: Array, body: Array },
-  Tagged { tag: Symbol, value: * }
+  Tagged { tag: Symbol, value: * },
+  Raw { value: String }
 } deriving (Base, Cata)
 exports.Value = Value;
 
@@ -44,6 +45,10 @@ Lambda::toString = function() {
 
 Tagged::toString = function() {
   return 'Tagged(' + show(this.tag) + ', ' + show(this.value) + ')'
+}
+
+Raw::toString = function() {
+  return this.value
 }
 
 
@@ -71,3 +76,9 @@ Tagged::toJSON = function() {
   }
 }
 
+Raw::toJSON = function() {
+  return {
+    '#type': 'Dollphie.Raw',
+    'value': this.value
+  }
+}

@@ -12,7 +12,7 @@ var { Base }        = require('boo');
 var { List, Value } = require('./data');
 var { eval }        = require('./eval');
 
-var { Applicative, Symbol, Lambda, Tagged, Section, Declaration } = Value;
+var { Applicative, Symbol, Lambda, Tagged, Raw } = Value;
 
 
 // -- Helpers ----------------------------------------------------------

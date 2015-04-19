@@ -4,7 +4,7 @@
 
 // -- Dependencies -----------------------------------------------------
 var extend = require('xtend');
-var { Value: { Symbol, Applicative, Lambda, Tagged } } = require('../../language/data');
+var { Value: { Symbol, Applicative, Lambda, Tagged, Raw } } = require('../../language/data');
 
 
 // -- Helpers ----------------------------------------------------------
@@ -29,12 +29,16 @@ function transformation {
     Tagged(Symbol('text'), xs.map(transformation)),
 
   Tagged(Symbol('bold'), Tagged(Symbol('text'), xs)) => 
-    '**' + xs.map(transformation) + '**',
+    Raw('**' + xs.map(transformation) + '**'),
 
   Tagged(Symbol('italic'), Tagged(Symbol('text'), xs)) =>
-    '*' + xs.map(transformation) + '*',
+    Raw('*' + xs.map(transformation) + '*'),
 
+  Tagged(Symbol('code'), x) => Tagged(Symbol('code'), x),
+  
   Tagged(t, data) => Tagged(t, transformation(data)),
+
+  a @ String => a.replace(/([\*_#])/g, '\\$1'),
 
   // Arrays have to have all its components transformed
   xs @ Array => xs.map(transformation),
