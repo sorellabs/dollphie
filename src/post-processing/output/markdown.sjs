@@ -8,7 +8,7 @@ var { curry } = require('core.lambda');
 var { unary } = require('core.arity');
 var { Value: { Symbol, Applicative, Lambda, Tagged, Raw }} = require('../../language/data');
 var preProcess = require('../text/markdown').transformation;
-var pp = require('../../utils/pretty-printer');
+var pp = require('text.pretty-printing');
 
 // -- Helpers ----------------------------------------------------------
 function repeat(n, s) {
