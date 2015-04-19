@@ -206,7 +206,7 @@ ometa CoreParser {
   number = digits:a ('.' digits:b)? 
         -> Num(toNumber(a, b)),
 
-  escapedChar = '\\' '"',
+  escapedChar = '\\' '"' -> '"',
   stringChar  = escapedChar | (~seq('"') char),
   string      = '"' stringChar*:as '"' -> Str(as.join('')),
 
