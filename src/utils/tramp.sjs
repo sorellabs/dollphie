@@ -25,7 +25,6 @@ Unary::apply = function() {
 }
 
 Binary::apply = function() {
-  console.log(s(this['1']), s(this['2'].toString()));
   return this['0'](this['1'], this['2'])
 }
 
@@ -77,5 +76,6 @@ module.exports = {
   binary: binary,
   ternary: ternary,
   nary: nary,
-  done: done
+  done: done,
+  Trampoline: Trampoline
 }

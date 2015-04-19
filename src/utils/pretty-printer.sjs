@@ -9,7 +9,7 @@
 // -- Dependencies -----------------------------------------------------
 var { Base }  = require('adt-simple');
 var { curry } = require('core.lambda');
-var { trampoline, done, ternary } = require('./tramp')
+var { Trampoline, trampoline, done, ternary, binary } = require('./tramp')
 
 // -- Data structures --------------------------------------------------
 //
@@ -95,12 +95,32 @@ function best(width, indentation, doc) {
       [[i, NIL], ...xs]          => ternary(go, w, k, xs),
       [[i, CONCAT(x, y)], ...xs] => ternary(go, w, k, [[i, x], [i, y]] +++ xs),
       [[i, NEST(j, x)], ...xs]   => ternary(go, w, k, [[i + j, x]] +++ xs),
-      [[i, TEXT(s)], ...xs]      => done(Text(s, trampoline(go(w, k + s.length, xs)))),
-      [[i, LINE], ...xs]         => done(Line(i, trampoline(go(w, i, xs)))),
-      [[i, UNION(x, y)], ...xs]  => done(better(w, k,
-                                                trampoline(go(w, k, [[i, x]] +++ xs)),
-                                                λ[trampoline(go(w, k, [[i, y]] +++ xs))]
-                                               ))
+      [[i, TEXT(s)], ...xs]      => binary(_text, s, go(w, k + s.length, xs)),
+      [[i, LINE], ...xs]         => binary(_line, i, go(w, i, xs)),
+      [[i, UNION(x, y)], ...xs]  => better(w, k,
+                                           ternary(go, w, k, [[i, x]] +++ xs),
+                                           λ[ternary(go, w, k, [[i, y]] +++ xs)]
+                                          )
+    }
+  }
+
+  // #### function: _text
+  // @type: String, Continuation
+  function _text(s, g) {
+    if (g instanceof Trampoline.Done) {
+      return done(Text(s, trampoline(g)))
+    } else {
+      return binary(_text, s, g.fn.apply())
+    }
+  }
+
+  // #### function: _line
+  // @type: Int, Continuation
+  function _line(i, g) {
+    if (g instanceof Trampoline.Done) {
+      return done(Line(i, trampoline(g)))
+    } else {
+      return binary(_line, i, g.fn.apply())
     }
   }
 
