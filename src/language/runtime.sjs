@@ -266,6 +266,40 @@ var Env = module.exports = Base.derive({
     c.assert(c.String(data.block));
     
     return meta('portability', data.block)
+  }),
+
+  synopsis:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+    
+    return meta('synopsis', data.block)
+  }),
+
+  platform:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return meta('platform', data.block)
+  }),
+
+  literal:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return Tagged(Symbol('literal'), data.block);
+  }),
+
+  link:
+  Applicative(['url', 'text'], function(data) {
+    return Tagged(Symbol('link'), { url: data.url, text: data.text })
+  }),
+
+  ref:
+  Applicative(['id', 'block'], function(data) {
+    c.assert(c.String(data.id));
+    c.assert(c.String(data.block));
+
+    return Tagged(Symbol('ref'), { id: data.id, url: data.block })
   })
 })
 

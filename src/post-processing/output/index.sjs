@@ -7,5 +7,6 @@ module.exports = {
     transformation: function(ast){ return ast }
   },
 
-  markdown: require('./markdown')
+  markdown: require('./markdown'),
+  sphinx: require('./rst')
 }
