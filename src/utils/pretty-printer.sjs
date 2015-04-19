@@ -37,7 +37,7 @@ function flatten {
   CONCAT(a, b)   => CONCAT(flatten(a), flatten(b)),
   NEST(depth, a) => NEST(depth, flatten(a)),
   TEXT(s)        => TEXT(s),
-  LINE           => TEXT(""),
+  LINE           => TEXT(" "),
   UNION(a, b)    => flatten(a),
   a              => (function(){ throw new Error("No match: " + a) })();
 }
@@ -152,12 +152,12 @@ function stack(xs) {
 // @type: Int → DOC → DOC → DOC → DOC
 function bracket(indent, left, x, right) {
   return group(
-    spread(
-      text(l),
+    spread([
+      text(left),
       nest(indent, concat(line(), x)),
       line(),
-      text(r)
-    )
+      text(right)
+    ])
   )
 }
 
