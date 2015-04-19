@@ -8,7 +8,7 @@
     "adt-simple": "^0.1.3",
     "boo": "~2.0.0",
     "core.arity": "~1.0.0",
-    "core.check": "~0.1.0",
+    "core.check": "^0.1.1",
     "core.inspect": "~1.0.3",
     "core.lambda": "~1.0.0",
     "data.maybe": "~1.2.0",

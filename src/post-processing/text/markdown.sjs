@@ -36,9 +36,6 @@ function transformation {
 
   Tagged(t, data) => Tagged(t, transformation(data)),
 
-  // Text has to escape markdown special symbols
-  a @ String => a.replace(/([\*_\-#])/g, '\\$1'),
-
   // Arrays have to have all its components transformed
   xs @ Array => xs.map(transformation),
 

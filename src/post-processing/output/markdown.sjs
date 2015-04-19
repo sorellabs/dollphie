@@ -19,29 +19,65 @@ function sanitise(s) {
   return s.replace(/([\*_`\-#])/g, '\\$1')
 }
 
+function renderStability(v) {
+  return match v {
+    'deprecated'     => badge('0. Deprecated', 'red'),
+    'experimental'   => badge('1. Experimental', 'orange'),
+    'unstable'       => badge('2. Unstable', 'yellow'),
+    'stable'         => badge('3. Stable', 'green'),
+    'frozen'         => badge('4. Frozen', 'green'),
+    'locked'         => badge('5. Locked', 'blue'),
+    undefined        => undefined,
+    null             => null
+  };
+
+  function badge(s, c) {
+    return '[![' + s + '](https://img.shields.io/badge/stability-' + sanitise(s) + '-' + c + '.svg?style=flat-square)](https://nodejs.org/api/documentation.html#documentation_stability_index)'
+  }
+
+  function sanitise(s) {
+    return s.replace(/\s/g, '_')
+  }
+}
+
 function field(name, value) {
   if (value == null) {
     return pp.nil()
   } else {
-    return pp.concat(
-      pp.spread([
-        pp.text('- **' + name + '**:'),
-        pp.text(String(value))
-      ]),
-      pp.line()
-    )
+    return pp.spread([
+      pp.text('- **' + name + '**:'),
+      pp.text(String(value))
+    ])
   }
+}
+
+// @type: String, String → PrettyPrinter.DOC
+function code(lang, lines) {
+  return pp.stack([
+    pp.line() +++ pp.text('```' + lang)
+  ] +++ lines.split(/\r\n|\r|\n/).map(pp.text) +++ [
+    pp.text('```') +++ pp.line()
+  ])
+}
+
+function visibility(meta) {
+  return [ meta['private']?   'private'   : ''
+         , meta['public']?    'public'    : ''
+         , meta['protected']? 'protected' : ''
+         ].filter(Boolean).map(pp.text)
 }
 
 // @type: Int, String, [Expr] → PrettyPrinter.DOC
 function section(depth, heading, meta, children) {
   return pp.stack([
     pp.concat(
-      pp.spread([pp.text(repeat(depth, '#')), pp.text(heading)]),
+      pp.spread([pp.text(repeat(depth, '#'))] +++ visibility(meta) +++ [pp.text(heading)]),
       pp.line()
     ),
-    field('Signature', meta.type),
-    field('Private', meta['private'])
+  ] +++ (meta.type? [code('hs', meta.type)] : []) +++ [
+    field('Stability', renderStability(meta.stability)),
+    field('Portability', meta.portability),
+    pp.line()
   ] +++ children.map(unary(generate(depth + 1))))
 }
 
@@ -74,17 +110,11 @@ function generate(depth, ast) {
     Tagged(Symbol('section'), x) =>
       section(depth, x.title, {}, x.children),
 
-    Tagged(Symbol('code'), x) =>
-      pp.stack([
-        pp.concat(pp.line(), pp.text('```' + x.language)),
-      ] +++ x.code.split(/\r\n|\r|\n/).map(pp.text) +++ [
-        pp.concat(pp.text('```'), pp.line())
-      ]),
-
+    Tagged(Symbol('code'), x) => code(x.language, x.code),
     Tagged(Symbol('meta'), *) => pp.nil(),
   
     xs @ Array => pp.stack(xs.map(unary(generate(depth)))),
-    node => pp.text(node.toString())
+    node => pp.text(node.toString().replace(/([\*_\-#])/g, '\\$1'))
   }
 }
 

@@ -197,6 +197,10 @@ var Env = module.exports = Base.derive({
   
   declaration:
   Applicative(['kind', 'name', 'children'], function(data) {
+    c.assert(c.String(data.kind));
+    c.assert(c.ArrayOf(c.String)(data.name));
+    c.assert(c.Array(data.children));
+    
     return Tagged(Symbol('declaration'),
                   { kind: data.kind,
                     name: data.name,
@@ -206,6 +210,9 @@ var Env = module.exports = Base.derive({
 
   section:
   Applicative(['title', 'children'], function(data) {
+    c.assert(c.String(data.title));
+    c.assert(c.Array(data.children));
+    
     return Tagged(Symbol('section'),
                   { title: data.title,
                     meta: {},
@@ -214,10 +221,12 @@ var Env = module.exports = Base.derive({
 
   code:
   Applicative(['language', 'block'], function(data) {
+    c.assert(c.String(data.block));
+    console.error('>>>', data.block);
+    
     return Tagged(Symbol('code'),
                   { language: data.language,
                     code: data.block })
-                    
   }),
 
   'private':
@@ -225,9 +234,39 @@ var Env = module.exports = Base.derive({
     return meta('private', true)
   }),
 
+  'public':
+  Applicative([], function() {
+    return meta('public', true)
+  }),
+
   type:
   Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+    
     return meta('type', data.block)
+  }),
+
+  stability:
+  Applicative(['block'], function(data) {
+    var v = data.block.toLowerCase();
+    var allowed = c.Or([
+      c.Value('deprecated'),
+      c.Value('experimental'),
+      c.Value('unstable'),
+      c.Value('stable'),
+      c.Value('frozen'),
+      c.Value('locked')
+    ]);
+    c.assert(allowed(v));
+
+    return meta('stability', v)
+  }),
+
+  portability:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+    
+    return meta('portability', data.block)
   })
 })
 
