@@ -213,10 +213,10 @@ var Env = module.exports = Base.derive({
   }),
 
   code:
-  Applicative(['language', 'code'], function(data) {
+  Applicative(['language', 'block'], function(data) {
     return Tagged(Symbol('code'),
                   { language: data.language,
-                    code: data.code })
+                    code: data.block })
                     
   }),
 
