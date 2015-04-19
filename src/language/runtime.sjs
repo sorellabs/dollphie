@@ -222,7 +222,6 @@ var Env = module.exports = Base.derive({
   code:
   Applicative(['language', 'block'], function(data) {
     c.assert(c.String(data.block));
-    console.error('>>>', data.block);
     
     return Tagged(Symbol('code'),
                   { language: data.language,
