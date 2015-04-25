@@ -280,17 +280,16 @@ ometa SugaredParser <: CoreParser {
   blankLine = hs* (eol | eof)                      -> softBreak(),
   paragraph = (hardLine | softLine)+:a blankLine   -> paragraph(a),
 
-  strong     = '\\' '*'        -> Str('*')
-             | '*' text+:a '*' -> bold(text(a)),
-  italic     = '\\' '/'        -> Str('/')
-             | '/' text+:a '/' -> italic(text(a)),
+  emphasis   = '\\' '*'                -> Str('*')
+             | '*' '*' text+:a '*' '*' -> bold(text(a))
+             | '*' text+:a '*'         -> italic(text(a)),
   literal    = '\\' '`'                       -> Str('`')
              | '`' (~('`' | eol) char)+:a '`' -> literal(Str(a.join(''))),
-  formatting = strong | italic | literal,
+  formatting = emphasis | literal,
 
   escapeExpr = '\\' '@' -> Str('@'),
   text       = escapeExpr | callable | formatting | word,
-  word       = (~('\\' | '*' | '/' | '`' | '@' | eol) char)+:a -> Str(a.join('')),
+  word       = (~('\\' | '*' | '`' | '@' | eol) char)+:a -> Str(a.join('')),
 
   document = (ws block)*:a ws eof -> Document(ExprList(a))
 }
