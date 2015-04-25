@@ -165,6 +165,14 @@ var Env = module.exports = Base.derive({
   }),
 
   // -- Text -----------------------------------------------------------
+  raw:
+  Applicative(['format', 'block'], function(data) {
+    c.assert(c.String(data.block))
+    c.assert(c.String(data.format))
+
+    return Raw(data.format, data.block)
+  }),
+
   paragraph:
   Applicative(['value'], function(data) {
     return Tagged(Symbol('paragraph'), data.value)
@@ -226,6 +234,20 @@ var Env = module.exports = Base.derive({
     return Tagged(Symbol('code'),
                   { language: data.language,
                     code: data.block })
+  }),
+
+  list:
+  Applicative(['items'], function(data) {
+    c.assert(c.Array(data.items));
+    
+    return Tagged(Symbol('list'), data.items)
+  }),
+
+  'ordered-list':
+  Applicative(['items'], function(data) {
+    c.assert(c.Array(data.items));
+
+    return Tagged(Symbol('ordered-list'), data.items)
   }),
 
   'private':

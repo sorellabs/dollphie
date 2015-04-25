@@ -6,7 +6,7 @@
 var extend = require('xtend');
 var { curry } = require('core.lambda');
 var { unary } = require('core.arity');
-var { Value: { Symbol, Tagged }} = require('../../language/data');
+var { Value: { Symbol, Tagged, Raw }} = require('../../language/data');
 var pp = require('text.pretty-printing');
 var poly = require('polygamous');
 var Maybe = require('data.maybe');
@@ -165,9 +165,42 @@ declaration.when('module', function _module(rubric, depth, x) {
   ] +++ x.children.map(unary(generate(rubric, depth + 1))))
 });
 
-declaration.when('function', function _function(rubric, depth, x) {
-  return funcDecl(rubric, depth, 'function', name(x.name), qualifiedName(x.name), x)
+declaration.when('class', function _function(rubric, depth, x) {
+  return pp.stack([
+    title(rubric, depth, 'Class: ``' + name(x.name) + '``'),
+    directive(
+      'class', Maybe.Just(qualifiedName(x.name)),
+      {},
+      pp.stack(maybe(typeSignature(x.meta.type)) +++ [
+        commonOptions(x.meta),
+        pp.line()
+      ])
+    ),
+  ] +++ x.children.map(unary(generate(rubric, depth + 1))))
 })
+
+declaration.when('function', function _function(rubric, depth, x) {
+  return funcDecl(rubric, depth,
+                  'function', name(x.name),
+                  qualifiedName(x.name),
+                  x)
+})
+declaration.when('method', function _function(rubric, depth, x) {
+  return funcDecl(rubric, depth,
+                  'method', '#' + name(x.name),
+                  qualifiedName(x.name),
+                  x)
+})
+
+// @type: PrettyPrinter.DOC → PrettyPrinter.DOC
+function listItem(x) {
+  return pp.text('* ') +++ pp.nest(3, x)
+}
+
+// @type: PrettyPrinter.DOC → PrettyPrinter.DOC
+function listOrdItem(x) {
+  return pp.text('#. ') +++ pp.nest(4, x)
+}
 
 
 
@@ -194,8 +227,12 @@ function generate(rubric, depth, ast) {
     Tagged(Symbol('bold'), Tagged(Symbol('text'), xs)) =>
       pp.text('**') +++ join(xs.map(unary(generate(rubric, depth)))) +++ pp.text('**'),
 
+    Tagged(Symbol('bold'), s @ String) => pp.text('**' + s + '**') ,
+
     Tagged(Symbol('italic'), Tagged(Symbol('text'), xs)) =>
       pp.text('*') +++ join(xs.map(unary(generate(rubric, depth)))) +++ pp.text('*'),
+
+    Tagged(Symbol('italic'), s @ String) => pp.text('*' + s + '*'),
     
     Tagged(Symbol('literal'), s) =>
       pp.text('``' + s + '``'),
@@ -206,10 +243,17 @@ function generate(rubric, depth, ast) {
     Tagged(Symbol('ref'), x) =>
       pp.line() +++ pp.text('.. _`' + x.id + '`: ' + x.url) +++ pp.line(),      
 
+    Tagged(Symbol('list'), xs) =>
+      pp.line() +++ pp.stack(xs.map(generate(rubric, depth) ->> listItem)) +++ pp.line(),
+
+    Tagged(Symbol('ordered-list'), xs) =>
+      pp.line() +++ pp.stack(xs.map(generate(rubric, depth) ->> listOrdItem)) +++ pp.line(),
+    
     Tagged(Symbol('code'), x) => code(x.language, x.code),
     Tagged(Symbol('meta'), *) => pp.nil(),
 
-
+    Raw('ReST', s) => pp.text(s),
+    Raw(*, *) => pp.nil(),
     xs @ Array => pp.stack(xs.map(unary(generate(rubric, depth)))),
     node => pp.text(String(node))
   }

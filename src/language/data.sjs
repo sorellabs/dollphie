@@ -30,7 +30,7 @@ union Value {
   Applicative { args: Array, fn: Function },
   Lambda { env: isEnvironment, args: Array, body: Array },
   Tagged { tag: Symbol, value: * },
-  Raw { value: String }
+  Raw { format: String, value: String }
 } deriving (Base, Cata)
 exports.Value = Value;
 
