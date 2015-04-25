@@ -38,7 +38,7 @@ var Context    = AST.Expr.Context;
 // ### data: reservedSymbols
 // @private
 // @type{ Array<String> }
-var reservedSymbols = ["define", "let", "if", "fun", "raw"];
+var reservedSymbols = ["define", "let", "if", "fun", "quote"];
 
 // ### function: isReserved
 // @private
@@ -188,6 +188,19 @@ function italic(contents) {
   )
 }
 
+// ### function: literal
+// @private
+// @type: Expr → Expr
+function literal(what) {
+  return App(
+    Id('literal'),
+    ArgList([
+      Pos(what)
+    ]),
+    EmptyBlock
+  )
+}
+
 
 // -- Parsers ----------------------------------------------------------
 
@@ -250,7 +263,7 @@ ometa CoreParser {
   fun = kw('@fun') '(' ws args:a ws expr*:b ws ')' 
      -> Fun(ParamList(a), ExprList(b)),
 
-  quote = kw('@raw') '(' ws expr:a ws ')' 
+  quote = kw('@quote') '(' ws expr:a ws ')' 
        -> Quote(a),
 
   callable = letExpr | ifExpr | fun | def | quote | call,
@@ -280,11 +293,13 @@ ometa SugaredParser <: CoreParser {
              | '*' text+:a '*' -> bold(text(a)),
   italic     = '\\' '/'        -> Str('/')
              | '/' text+:a '/' -> italic(text(a)),
-  formatting = strong | italic,
+  literal    = '\\' '`'                       -> Str('`')
+             | '`' (~('`' | eol) char)+:a '`' -> literal(Str(a.join(''))),
+  formatting = strong | italic | literal,
 
   escapeExpr = '\\' '@' -> Str('@'),
   text       = escapeExpr | callable | formatting | word,
-  word       = (~('\\' | '*' | '/' | '@' | eol) char)+:a -> Str(a.join('')),
+  word       = (~('\\' | '*' | '/' | '`' | '@' | eol) char)+:a -> Str(a.join('')),
 
   document = (ws block)*:a ws eof -> Document(ExprList(a))
 }
