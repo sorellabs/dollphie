@@ -78,5 +78,9 @@ module.exports = {
   javascript: {
     transformation: lineComment(/^\s*\/\/\s?(.*)$/, 'js'),
     description: 'Convert JavaScript files to Dollphie'
+  },
+  python: {
+    transformation: lineComment(/^\s*#\s?(.*)$/, 'py'),
+    description: 'Convert Python files to Dollphie'
   }
 }
