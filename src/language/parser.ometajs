@@ -92,10 +92,9 @@ function declaration(level, kind, value) {
     level,
     function(children) {
       return App(
-        Id('declaration'),
+        kind,
         ArgList([
-          Pos(repack(Id, Str, kind)),
-          Pos(repackQualifiedId(value)),
+          Pos(value),
           Pos(Vector(children))
         ]),
         EmptyBlock
@@ -103,13 +102,6 @@ function declaration(level, kind, value) {
     }
   );
 
-  function repackQualifiedId(expr) {
-    return expr.cata({
-      Vector: function(ids) {
-        return Vector(ids.map(repack.bind(null, Id, Str)))
-      }
-    })
-  }
 }
 
 // ### function: text
@@ -281,8 +273,7 @@ ometa SugaredParser <: CoreParser {
   title   = (~('-') char)+:a -> a.join(''),
   section = '-'+:a hs* title:b hs* '-'* -> section(a.length, b),
 
-  qualName    = name:a ('.' name)*:bs -> Vector([a].concat(bs)),
-  declaration = '#'+:a hs* name:b ':' hs* qualName:c hs* '#'* -> declaration(a.length, b, c),
+  declaration = '#'+:a hs* name:b ':' hs* (~eol char)*:c hs* '#'* -> declaration(a.length, b, Str(c.join(''))),
 
   hardLine  = hs* '|' text+:a (eol | eof)          -> hardLine(a),
   softLine  = ~blankLine text+:a (eol | eof)       -> text(a),

@@ -121,21 +121,29 @@ function section(rubric, depth, x) {
       +++ pp.stack(x.children.map(unary(generate(rubric, depth + 1))))
 }
 
+// @type: { description: String, name: String? } → String | null
+function renderThrows(x) {
+  return !x?      null
+  :      x.name?  '**' + x.name + '** - ' + x.description
+  :      /* _ */  x.description
+}
+
 // @type: Int, String, String, String, Declaration → PrettyPrinter.DOC
-function funcDecl(rubric, depth, kind, name, fullName, x) {
+function funcDecl(rubric, depth, kind, name, signature, x) {
+  name = /\(.*?\)/.test(name)? name : name + '()';
   return pp.stack([
     pp.text('.. rst-class:: hidden-heading'),
     pp.line(),
-    title(rubric, depth, name + '()'),
+    title(rubric, depth, name),
     directive(
       kind,
-      Maybe.Just(fullName + (x.meta.signature || '()')),
+      Maybe.Just(signature),
       {},
       pp.stack(maybe(typeSignature(x.meta.type)) +++ [
         commonOptions(x.meta)
         +++ options({
           "Returns": x.meta.returns,
-          "Throws": x.meta['throws']
+          "Throws": renderThrows(x.meta['throws'])
         }),
         pp.line()
       ] +++ x.children.map(unary(generate(true, depth + 1))))
@@ -148,9 +156,9 @@ var declaration = poly(function(_, _, x){ return x.kind });
 
 declaration.when('module', function _module(rubric, depth, x) {
   return pp.stack([
-    title(rubric, depth, 'Module: ``' + name(x.name) + '``'),
+    title(rubric, depth, 'Module: ``' + name(x.meta.name) + '``'),
     directive(
-      'module', Maybe.Just(qualifiedName(x.name)),
+      'module', Maybe.Just(qualifiedName(x.meta.name)),
       {
         "synopsis": x.meta['synopsis'],
         "platform": x.meta['platform']
@@ -167,9 +175,9 @@ declaration.when('module', function _module(rubric, depth, x) {
 
 declaration.when('class', function _function(rubric, depth, x) {
   return pp.stack([
-    title(rubric, depth, 'Class: ``' + name(x.name) + '``'),
+    title(rubric, depth, 'Class: ``' + name(x.meta.name) + '``'),
     directive(
-      'class', Maybe.Just(qualifiedName(x.name)),
+      'class', Maybe.Just(qualifiedName(x.meta.name)),
       {},
       pp.stack(maybe(typeSignature(x.meta.type)) +++ [
         commonOptions(x.meta),
@@ -181,14 +189,14 @@ declaration.when('class', function _function(rubric, depth, x) {
 
 declaration.when('function', function _function(rubric, depth, x) {
   return funcDecl(rubric, depth,
-                  'function', name(x.name),
-                  qualifiedName(x.name),
+                  'function', x.meta.name,
+                  x.meta.signature,
                   x)
 })
 declaration.when('method', function _function(rubric, depth, x) {
   return funcDecl(rubric, depth,
-                  'method', '#' + name(x.name),
-                  qualifiedName(x.name),
+                  'method', '#' + x.meta.name,
+                  x.meta.signature,
                   x)
 })
 

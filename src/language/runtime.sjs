@@ -51,6 +51,12 @@ function meta(key, value) {
   return Tagged(Symbol('meta'), { key: key, value: value })
 }
 
+function parseFnSignature(sig) {
+  var m = sig.match(/(.+?)(\(.*?\))/);
+  return m == null?       { name: sig, signature: sig }
+  :      /* otherwise */  { name: m[1], signature: sig }
+}
+
 
 // -- Core environment -------------------------------------------------
 var Env = module.exports = Base.derive({
@@ -204,14 +210,12 @@ var Env = module.exports = Base.derive({
   }),
   
   declaration:
-  Applicative(['kind', 'name', 'children'], function(data) {
+  Applicative(['kind', 'children'], function(data) {
     c.assert(c.String(data.kind));
-    c.assert(c.ArrayOf(c.String)(data.name));
     c.assert(c.Array(data.children));
     
     return Tagged(Symbol('declaration'),
                   { kind: data.kind,
-                    name: data.name,
                     meta: {},
                     children: data.children })
   }),
@@ -224,6 +228,18 @@ var Env = module.exports = Base.derive({
     return Tagged(Symbol('section'),
                   { title: data.title,
                     meta: {},
+                    children: data.children })
+  }),
+
+  // Common declarations
+  'function':
+  Applicative(['signature', 'children'], function(data) {
+    c.assert(c.String(data.signature));
+    c.assert(c.Array(data.children));
+
+    return Tagged(Symbol('declaration'),
+                  { kind: 'function',
+                    meta: parseFnSignature(data.signature),
                     children: data.children })
   }),
 
@@ -258,6 +274,13 @@ var Env = module.exports = Base.derive({
   'public':
   Applicative([], function() {
     return meta('public', true)
+  }),
+
+  name:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return meta('name', data.block);
   }),
 
   type:
@@ -302,6 +325,28 @@ var Env = module.exports = Base.derive({
     c.assert(c.String(data.block));
 
     return meta('platform', data.block)
+  }),
+
+  returns:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return meta('returns', data.block)
+  }),
+
+  'throws':
+  Applicative(['name', 'block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return meta('throws', { description: data.block,
+                            name: data.name })
+  }),
+
+  signature:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return meta('signature', data.block)
   }),
 
   literal:
