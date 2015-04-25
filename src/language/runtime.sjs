@@ -51,10 +51,30 @@ function meta(key, value) {
   return Tagged(Symbol('meta'), { key: key, value: value })
 }
 
+function makeDeclaration(data, kind, parser) {
+    c.assert(c.String(data.signature));
+    c.assert(c.Array(data.children));
+
+    return Tagged(Symbol('declaration'),
+                  {
+                    kind: kind,
+                    meta: parser(data.signature),
+                    children: data.children
+                  })
+}
+
 function parseFnSignature(sig) {
   var m = sig.match(/(.+?)(\(.*?\))/);
   return m == null?       { name: sig, signature: sig }
   :      /* otherwise */  { name: m[1], signature: sig }
+}
+
+function parseClassSignature(sig) {
+  var m = sig.match(/(.+?)(\(.*?\))(?:\s*<\s*(.+))?/);
+  return m == null?       { name: sig, signature: sig }
+  :      /* otherwise */  { name: m[1],
+                            signature: m[1] + m[2],
+                            parents: m[3] }
 }
 
 
@@ -234,22 +254,49 @@ var Env = module.exports = Base.derive({
   // Common declarations
   'function':
   Applicative(['signature', 'children'], function(data) {
-    c.assert(c.String(data.signature));
-    c.assert(c.Array(data.children));
+    return makeDeclaration(data, 'function', parseFnSignature)
+  }),
 
-    return Tagged(Symbol('declaration'),
-                  { kind: 'function',
-                    meta: parseFnSignature(data.signature),
-                    children: data.children })
+  'method':
+  Applicative(['signature', 'children'], function(data) {
+    return makeDeclaration(data, 'method', parseFnSignature)
+  }),
+
+  'classmethod':
+  Applicative(['signature', 'children'], function(data) {
+    return makeDeclaration(data, 'classmethod', parseFnSignature)
+  }),
+
+  'class':
+  Applicative(['signature', 'children'], function(data) {
+    return makeDeclaration(data, 'class', parseClassSignature)
   }),
 
   code:
   Applicative(['language', 'block'], function(data) {
     c.assert(c.String(data.block));
+    c.assert(c.String(data.language));
     
     return Tagged(Symbol('code'),
                   { language: data.language,
                     code: data.block })
+  }),
+
+  example:
+  Applicative(['language', 'block', 'line-numbers', 'emphasise-lines', 'caption'], function(data) {
+    c.assert(c.String(data.block));
+    c.assert(c.String(data.language));
+
+    return Tagged(Symbol('example'),
+                  {
+                    language: data.language,
+                    code: data.block,
+                    options: {
+                      'line-numbers': data.lineNumbers !== false,
+                      'emphasise-lines': data['emphasise-lines'],
+                      caption: data.caption || 'Example'
+                    }
+                  })
   }),
 
   list:
@@ -357,7 +404,7 @@ var Env = module.exports = Base.derive({
   }),
 
   link:
-  Applicative(['url', 'text'], function(data) {
+  Applicative(['text', 'url'], function(data) {
     return Tagged(Symbol('link'), { url: data.url, text: data.text })
   }),
 

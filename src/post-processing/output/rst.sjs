@@ -18,6 +18,11 @@ function repeat(n, s) {
   return Array(n + 1).join(s)
 }
 
+// @type: a → Boolean
+function isBool(x) {
+  return typeof x === "boolean"
+}
+
 // @type: Int → String
 function charFor(depth) {
   var chars = ['*', '=', '-', '~', '^', '"', '\''];
@@ -82,9 +87,17 @@ function title(rubric, depth, s) {
   ])
 }
 
-// @type: String | null, String → PrettyPrinter.DOC
-function code(lang, s) {
-  return directive('code-block', Maybe.fromNullable(lang), {}, lines(s))
+// @type: String | null, String, Options → PrettyPrinter.DOC
+function code(lang, s, opts) {
+  opts = opts || {};
+  return directive('code-block',
+                   Maybe.fromNullable(lang),
+                   {
+                     'caption': opts.caption,
+                     'linenos': opts['line-numbers'],
+                     'emphasize-lines': opts['emphasise-lines'] 
+                   },
+                   lines(s))
 }
 
 // @type: Object(String) → PrettyPrinter.DOC
@@ -92,8 +105,9 @@ function options(opts) {
   return pp.stack(items(opts).filter(second ->> Boolean).map(render) +++ [pp.line()]);
 
   function render(item) {
-    var [name, value] = item;
-    return pp.text(':' + name + ':') +++ pp.nest(2, pp.line() +++ lines(value))
+    var [name, v] = item;
+    return pp.text(':' + name + ':') +++ ( isBool(v)?       pp.nil()
+                                         : /* otherwise */  pp.nest(2, pp.line() +++ lines(v)))
   }
 }
 
@@ -175,12 +189,14 @@ declaration.when('module', function _module(rubric, depth, x) {
 
 declaration.when('class', function _function(rubric, depth, x) {
   return pp.stack([
-    title(rubric, depth, 'Class: ``' + name(x.meta.name) + '``'),
+    title(rubric, depth, 'Class: ``' + x.meta.name + '``'),
     directive(
-      'class', Maybe.Just(qualifiedName(x.meta.name)),
+      'class', Maybe.Just(x.meta.signature),
       {},
       pp.stack(maybe(typeSignature(x.meta.type)) +++ [
-        commonOptions(x.meta),
+        options({
+          "Parents": x.meta.parents
+        }) +++ commonOptions(x.meta),
         pp.line()
       ])
     ),
@@ -256,7 +272,8 @@ function generate(rubric, depth, ast) {
 
     Tagged(Symbol('ordered-list'), xs) =>
       pp.line() +++ pp.stack(xs.map(generate(rubric, depth) ->> listOrdItem)) +++ pp.line(),
-    
+
+    Tagged(Symbol('example'), x) => code(x.language, x.code, x.options),
     Tagged(Symbol('code'), x) => code(x.language, x.code),
     Tagged(Symbol('meta'), *) => pp.nil(),
 
