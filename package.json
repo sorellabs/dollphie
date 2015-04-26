@@ -1,6 +1,6 @@
 {
   "name": "dollphie",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "bin": {
     "dollphie": "bin/dollphie"
   },
@@ -16,7 +16,7 @@
     "docopt": "~0.4.1",
     "ometajs": "~3.3.7",
     "polygamous": "^1.0.3",
-    "text.pretty-printing": "^1.0.0",
+    "text.pretty-printing": "^1.0.2",
     "xtend": "~4.0.0"
   },
   "devDependencies": {
