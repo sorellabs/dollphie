@@ -414,6 +414,47 @@ var Env = module.exports = Base.derive({
     c.assert(c.String(data.block));
 
     return Tagged(Symbol('ref'), { id: data.id, url: data.block })
+  }),
+
+  note:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return Tagged(Symbol('note'), { kind: 'note', text: data.block })
+  }),
+
+  warning:
+  Applicative(['block'], function(data) {
+    c.assert(c.String(data.block));
+
+    return Tagged(Symbol('note'), { kind: 'warning', text: data.block })
+  }),
+
+  'version-added':
+  Applicative(['version', 'block'], function(data) {
+    c.assert(c.String(data.version));
+
+    return Tagged(Symbol('version-note'), { kind: 'added',
+                                            version: data.version,
+                                            text: data.block || '' })
+  }),
+
+  'version-changed':
+  Applicative(['version', 'block'], function(data) {
+    c.assert(c.String(data.version));
+
+    return Tagged(Symbol('version-note'), { kind: 'changed',
+                                            version: data.version,
+                                            text: data.block || '' })
+  }),
+
+  'deprecated':
+  Applicative(['version', 'block'], function(data) {
+    c.assert(c.String(data.version));
+
+    return Tagged(Symbol('version-note'), { kind: 'deprecated',
+                                            version: data.version,
+                                            text: data.block || '' })
   })
 })
 

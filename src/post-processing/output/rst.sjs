@@ -273,6 +273,12 @@ function generate(rubric, depth, ast) {
     Tagged(Symbol('ordered-list'), xs) =>
       pp.line() +++ pp.stack(xs.map(generate(rubric, depth) ->> listOrdItem)) +++ pp.line(),
 
+    Tagged(Symbol('note'), x) =>
+      directive(x.kind, Maybe.Nothing(), {}, lines(x.text)),
+
+    Tagged(Symbol('version-note'), x) =>
+      directive('version' + x.kind, Maybe.Just(x.version), {}, lines(x.text)),
+
     Tagged(Symbol('example'), x) => code(x.language, x.code, x.options),
     Tagged(Symbol('code'), x) => code(x.language, x.code),
     Tagged(Symbol('meta'), *) => pp.nil(),
