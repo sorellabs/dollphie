@@ -1,0 +1,58 @@
+#+STARTUP: content
+
+* 1.0.0
+** Post-Processing
+*** TODO Cross-reference resolution
+*** TODO Short → Fully Qualified binding resolution
+** Language
+*** TODO Allow meta tags to declare their own merging strategies
+This will allow better support for things like `@type` and `@author`.
+*** TODO Support linking to source code in a repository
+*** TODO Support common meta-data
+- [ ] Authors
+- [ ] File name
+- [ ] Repository
+- [ ] Line / Column
+- [ ] Version
+- [ ] Licence
+- [ ] Platforms
+- [ ] Stability
+- [ ] Portability
+- [ ] Visibility (Private / Public / Protected / Internal)
+- [ ] Modifiers (Static / Synchronised / Final)
+*** TODO Support common definitions
+- [ ] Function
+- [ ] Method
+- [ ] Class method
+- [ ] Attribute
+- [ ] Class
+- [ ] Interface
+- [ ] Type
+- [ ] Data type
+- [ ] Variable
+- [ ] Protocol
+*** TODO Support common block structures
+- [ ] Example
+- [ ] Note / Warning
+- [ ] List / Ordered List
+- [ ] Quote
+** Input formats
+*** TODO Basic support for all common languages
+- [ ] JavaScript
+- [ ] CoffeeScript / LiveScript / Coco
+- [ ] Python
+- [ ] Ruby
+- [ ] Lua
+- [ ] Scala / Java
+- [ ] Clojure / Emacs Lisp / Scheme / Racket
+- [ ] C / C++ / C#
+- [ ] Shell
+- [ ] Haskell
+- [ ] OCaml / SML
+** Output formats
+*** TODO JSON
+Should output the meta-data as a JSON file, similar to the YAML file used by
+Folktale's documentation.
+*** TODO Sphinx
+*** TODO Markdown
+
