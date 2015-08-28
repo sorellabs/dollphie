@@ -238,12 +238,12 @@ function generate(rubric, depth, ast) {
 
     Tagged(Symbol('paragraph'), xs) =>
       pp.stack(xs.map(unary(generate(rubric, depth))) +++ [pp.line()]),
-    
+
     Tagged(Symbol('text'), xs) =>
       join(xs.map(unary(generate(rubric, depth)))),
 
-    Tagged(Symbol('soft-break'), xs) =>
-      pp.line() +++ join(xs.map(unary(generate(rubric, depth)))),
+    Tagged(Symbol('soft-break')) =>
+      pp.line(),
 
     Tagged(Symbol('line'), xs) =>
       pp.line() +++ pp.text('| ') +++ join(xs.map(unary(generate(rubric, depth)))),
@@ -257,7 +257,7 @@ function generate(rubric, depth, ast) {
       pp.text('*') +++ join(xs.map(unary(generate(rubric, depth)))) +++ pp.text('*'),
 
     Tagged(Symbol('italic'), s @ String) => pp.text('*' + s + '*'),
-    
+
     Tagged(Symbol('literal'), s) =>
       pp.text('``' + s + '``'),
 
@@ -265,7 +265,7 @@ function generate(rubric, depth, ast) {
       pp.text('`' + x.text + (x.url? ' <' + x.url + '>' : '') + '`_'),
 
     Tagged(Symbol('ref'), x) =>
-      pp.line() +++ pp.text('.. _`' + x.id + '`: ' + x.url) +++ pp.line(),      
+      pp.line() +++ pp.text('.. _`' + x.id + '`: ' + x.url) +++ pp.line(),
 
     Tagged(Symbol('list'), xs) =>
       pp.line() +++ pp.stack(xs.map(generate(rubric, depth) ->> listItem)) +++ pp.line(),
